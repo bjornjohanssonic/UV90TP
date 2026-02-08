@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  COLORS, getMonday, aggregateWeeks, computePRs, generateNextActions,
+  COLORS, getMonday, toLocalDateStr, aggregateWeeks, computePRs, generateNextActions,
   type Activity, type Plan, type PlanWeek,
 } from "@/lib/dashboard-helpers";
 import {
@@ -277,12 +277,12 @@ export default function Dashboard() {
     else if (today >= planEndDate) currentPlanWeek = planWeeks[planWeeks.length - 1];
   }
 
-  const mondayStr = getMonday(today).toISOString().slice(0, 10);
+  const mondayStr = toLocalDateStr(getMonday(today));
   const sundayEnd = new Date(getMonday(today));
   sundayEnd.setDate(sundayEnd.getDate() + 7);
   const gymThisWeek = gymSessions.filter((a) => {
     const d = new Date(a.start_date);
-    return d.toISOString().slice(0, 10) >= mondayStr && d < sundayEnd;
+    return toLocalDateStr(d) >= mondayStr && d < sundayEnd;
   });
 
   const last8 = weeks.slice(0, 8).reverse();

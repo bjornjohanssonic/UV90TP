@@ -75,6 +75,14 @@ export function getMonday(d: Date): Date {
   return date;
 }
 
+/** Format a Date as "YYYY-MM-DD" in local time (avoids UTC shift from toISOString). */
+export function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function formatKm(meters: number): string {
   return (meters / 1000).toFixed(1);
 }
@@ -153,7 +161,7 @@ export function aggregateWeeks(activities: Activity[]): WeekData[] {
 
   for (const run of runs) {
     const monday = getMonday(new Date(run.start_date));
-    const key = monday.toISOString().slice(0, 10);
+    const key = toLocalDateStr(monday);
     if (!weekMap.has(key)) weekMap.set(key, []);
     weekMap.get(key)!.push(run);
   }
@@ -243,7 +251,7 @@ export function generateNextActions(
   let consecutiveDays = 0;
   const checkDate = new Date(today);
   for (let i = 0; i < 7; i++) {
-    const dayStr = checkDate.toISOString().slice(0, 10);
+    const dayStr = toLocalDateStr(checkDate);
     if (runs.some((r) => r.start_date.slice(0, 10) === dayStr)) {
       consecutiveDays++;
       checkDate.setDate(checkDate.getDate() - 1);

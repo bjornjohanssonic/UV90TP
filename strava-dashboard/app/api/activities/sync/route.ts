@@ -41,7 +41,16 @@ export async function POST(request: NextRequest) {
         const accessToken = await refreshAccessToken(athleteId);
         const db = getDb();
 
-        const after = Math.floor(new Date("2025-08-01T00:00:00Z").getTime() / 1000);
+        // Get the most recent activity date for incremental sync
+        const mostRecent = db
+          .prepare("SELECT start_date FROM activities ORDER BY start_date DESC LIMIT 1")
+          .get() as { start_date: string } | undefined;
+
+        // If we have activities, sync from 1 day before the most recent (to catch any edge cases)
+        // Otherwise start from Aug 1, 2025. UPSERT handles duplicates gracefully.
+        const after = mostRecent
+          ? Math.floor((new Date(mostRecent.start_date).getTime() - 24 * 60 * 60 * 1000) / 1000)
+          : Math.floor(new Date("2025-08-01T00:00:00Z").getTime() / 1000);
 
         let page = 1;
         const perPage = 100;

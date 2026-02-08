@@ -3,6 +3,9 @@ export interface PlanConfig {
   raceDate: string;
   raceDistanceKm: number;
   startingVolumeKm: number;
+  startingLongRunKm?: number; // Optional: specify starting long run capability
+  peakVolumeKm?: number; // Optional: override auto-calculated peak volume
+  totalWeeks?: number; // Optional: force specific plan duration
 }
 
 export interface GeneratedWeek {
@@ -126,162 +129,186 @@ function computePeakVolume(raceDistanceKm: number, startingVolumeKm: number): nu
 }
 
 export function generatePlan(config: PlanConfig): GeneratedPlan {
-  const taperSchedule = [0.70, 0.55, 0.35]; // 3-week taper
+  // 4-week taper (weeks 25-28)
+  const taperSchedule = [0.70, 0.55, 0.35, 0.20]; // 4-week taper
   const taperWeekCount = taperSchedule.length;
 
   const raceWeekMonday = getMondayBefore(config.raceDate);
 
-  // Start from next Monday
+  // Start from THIS Monday (the current week), not next Monday
   const today = new Date();
-  const todayMonday = getMondayBefore(toDateStr(today));
-  const nextMonday = new Date(todayMonday);
-  nextMonday.setDate(nextMonday.getDate() + 7);
+  const startMonday = getMondayBefore(toDateStr(today));
 
-  const totalWeeks = Math.round(
-    (raceWeekMonday.getTime() - nextMonday.getTime()) / (7 * 24 * 60 * 60 * 1000)
-  ) + 1; // +1 because race week is included
+  // Calculate or use provided total weeks
+  let totalWeeks: number;
+  if (config.totalWeeks) {
+    totalWeeks = config.totalWeeks;
+  } else {
+    totalWeeks = Math.round(
+      (raceWeekMonday.getTime() - startMonday.getTime()) / (7 * 24 * 60 * 60 * 1000)
+    ) + 1; // +1 because race week is included
+  }
 
   // Need at least taper + race week + 4 build weeks
   if (totalWeeks < taperWeekCount + 1 + 4) {
     throw new Error(`Not enough time: ${totalWeeks} weeks available, need at least ${taperWeekCount + 5}`);
   }
 
-  const peakVolumeKm = computePeakVolume(config.raceDistanceKm, config.startingVolumeKm);
+  // Use provided peak volume or calculate it
+  const peakVolumeKm = config.peakVolumeKm || computePeakVolume(config.raceDistanceKm, config.startingVolumeKm);
 
-  // Build phase = everything before taper + race week
-  const buildPhaseWeeks = totalWeeks - taperWeekCount - 1; // -1 for race week
+  // Starting long run (default to 30% of starting volume if not provided)
+  const startingLongRunKm = config.startingLongRunKm || config.startingVolumeKm * 0.3;
 
-  // Generate build phase volumes using progressive overload
+  // Build phase = weeks 1-24 (everything before taper)
+  const buildPhaseWeeks = totalWeeks - taperWeekCount;
+
+  // Generate build phase with specific long run progression and plateau
   const buildVolumes: number[] = [];
   const buildPhases: ("build" | "recovery")[] = [];
+  const longRuns: number[] = [];
   const cycleNumbers: (number | null)[] = [];
   const weekInCycles: (number | null)[] = [];
+  const backToBackFlags: boolean[] = [];
 
   let currentVolume = config.startingVolumeKm;
-  let weekIdx = 0;
+  let currentLongRun = startingLongRunKm;
   let cycleNum = 1;
-  let weekInCycle = 1;
 
-  while (weekIdx < buildPhaseWeeks) {
-    // Dynamic recovery frequency: 3:1 under 60km, 2:1 at 60+km
-    const cycleLength = currentVolume >= 60 ? 3 : 4; // 2:1 = 3 weeks, 3:1 = 4 weeks
-    const buildWeeksInCycle = cycleLength - 1;
+  // Define recovery weeks (every 3-4 weeks)
+  // For 24 build weeks: weeks 4, 8, 12, 16, 20 are recovery
+  const recoveryWeeks = new Set([4, 8, 12, 16, 20]);
 
-    if (weekInCycle <= buildWeeksInCycle) {
-      // Build week: add volume-dependent increase
-      if (weekInCycle > 1) {
-        const increase = getWeeklyIncreaseKm(currentVolume);
-        currentVolume += increase;
-      }
+  // Plateau phase: weeks 20-24 hold peak volume
+  const plateauStart = 20;
+  const plateauEnd = 24;
 
-      // Don't exceed peak volume during build
-      currentVolume = Math.min(currentVolume, peakVolumeKm);
+  // B2B weeks during plateau (weeks 20-24): 2-3 instances
+  const b2bWeeks = new Set([20, 23]); // 2 B2B weekends during plateau
 
-      buildVolumes.push(Math.round(currentVolume * 10) / 10);
-      buildPhases.push("build");
-      cycleNumbers.push(cycleNum);
-      weekInCycles.push(weekInCycle);
+  for (let weekNum = 1; weekNum <= buildPhaseWeeks; weekNum++) {
+    const isRecoveryWeek = recoveryWeeks.has(weekNum);
+    const isPlateauPhase = weekNum >= plateauStart && weekNum <= plateauEnd;
+    const isB2bWeek = b2bWeeks.has(weekNum);
 
-      weekInCycle++;
-    } else {
-      // Recovery week: 65-70% of previous week
-      const recoveryVolume = currentVolume * 0.65;
-      buildVolumes.push(Math.round(recoveryVolume * 10) / 10);
+    if (isRecoveryWeek) {
+      // Recovery week: ~65% of previous build week volume
+      const recoveryVolume = Math.round(currentVolume * 0.65 * 10) / 10;
+      buildVolumes.push(recoveryVolume);
+
+      // Recovery week long run: ~50% of previous long run
+      const recoveryLongRun = Math.round(currentLongRun * 0.5 * 10) / 10;
+      longRuns.push(recoveryLongRun);
+
       buildPhases.push("recovery");
       cycleNumbers.push(cycleNum);
-      weekInCycles.push(weekInCycle);
+      weekInCycles.push(4); // Recovery week is 4th week in cycle
+      backToBackFlags.push(false);
 
-      // Next cycle starts from where we left off (not from recovery volume)
-      weekInCycle = 1;
+      // Start new cycle
       cycleNum++;
+    } else {
+      // Build week
+      if (weekNum > 1 && !recoveryWeeks.has(weekNum - 1)) {
+        // Not first week and not coming from recovery
+        if (!isPlateauPhase) {
+          // Progressive volume increase (max 15%)
+          const maxIncrease = currentVolume * 0.15;
+          const targetIncrease = Math.min(5, maxIncrease); // Max 5km per week
+          currentVolume += targetIncrease;
+          currentVolume = Math.min(currentVolume, peakVolumeKm);
+        } else {
+          // Plateau: hold peak volume
+          currentVolume = peakVolumeKm;
+        }
+      } else if (recoveryWeeks.has(weekNum - 1)) {
+        // Coming from recovery week: bump back up
+        if (!isPlateauPhase) {
+          const increase = Math.min(5, currentVolume * 0.10);
+          currentVolume += increase;
+          currentVolume = Math.min(currentVolume, peakVolumeKm);
+        } else {
+          currentVolume = peakVolumeKm;
+        }
+      }
 
-      // Small bump for next cycle start
-      const nextIncrease = getWeeklyIncreaseKm(currentVolume);
-      currentVolume += nextIncrease;
-      currentVolume = Math.min(currentVolume, peakVolumeKm);
+      buildVolumes.push(Math.round(currentVolume * 10) / 10);
+
+      // Long run progression
+      if (weekNum <= 8) {
+        // Weeks 1-8: 15 km → 25 km (10 km over 8 weeks = ~1.4 km/week)
+        currentLongRun = 15 + ((25 - 15) / 8) * (weekNum - 1);
+      } else if (weekNum <= 16) {
+        // Weeks 9-16: 25 km → 35 km (10 km over 8 weeks = ~1.25 km/week)
+        currentLongRun = 25 + ((35 - 25) / 8) * (weekNum - 9);
+      } else if (weekNum <= 24) {
+        // Weeks 17-24: hold at 35-40 km
+        currentLongRun = 37.5; // Mid-point of 35-40 range
+      }
+
+      longRuns.push(Math.round(currentLongRun * 10) / 10);
+      buildPhases.push("build");
+
+      // Cycle position
+      const weeksIntoCycle = ((weekNum - 1) % 4) + 1;
+      cycleNumbers.push(cycleNum);
+      weekInCycles.push(weeksIntoCycle);
+
+      backToBackFlags.push(isB2bWeek);
     }
-
-    weekIdx++;
-  }
-
-  // Determine back-to-back long run weekends
-  // Introduced when weekly volume >= 50km, every 2-3 weeks, starting 10-12 weeks before race
-  const raceWeekIdx = totalWeeks - 1;
-  const b2bStartWeekIdx = Math.max(0, raceWeekIdx - 12); // Start back-to-backs 12 weeks out
-  const b2bEndWeekIdx = raceWeekIdx - taperWeekCount - 1; // Stop before taper
-
-  // Build week objects
-  const weeks: GeneratedWeek[] = [];
-
-  // Build phase weeks
-  for (let i = 0; i < buildVolumes.length; i++) {
-    const weekDate = new Date(nextMonday);
-    weekDate.setDate(weekDate.getDate() + i * 7);
-
-    const volume = buildVolumes[i];
-    const phase = buildPhases[i];
-    const longRun = getLongRunKm(volume, config.raceDistanceKm, phase);
-
-    // Back-to-back: only on build weeks, volume >= 50km, within the b2b window, every 2-3 weeks
-    const globalWeekIdx = i;
-    const inB2bWindow = globalWeekIdx >= b2bStartWeekIdx && globalWeekIdx <= b2bEndWeekIdx;
-    const isB2bCandidate = phase === "build" && volume >= 50 && inB2bWindow;
-
-    // Space back-to-backs about every 2-3 weeks within the window
-    let backToBack = false;
-    if (isB2bCandidate) {
-      const weeksIntoB2bWindow = globalWeekIdx - b2bStartWeekIdx;
-      backToBack = weeksIntoB2bWindow % 3 === 0; // Every 3rd week in the window
-    }
-
-    weeks.push({
-      weekNumber: i + 1,
-      startDate: toDateStr(weekDate),
-      targetVolumeKm: volume,
-      longRunKm: longRun,
-      backToBack,
-      phase,
-      cycleNumber: cycleNumbers[i],
-      weekInCycle: weekInCycles[i],
-    });
   }
 
   // Actual peak volume achieved
   const actualPeak = Math.max(...buildVolumes);
 
-  // Taper weeks (3 weeks)
+  // Build week objects for build phase
+  const weeks: GeneratedWeek[] = [];
+
+  for (let i = 0; i < buildPhaseWeeks; i++) {
+    const weekDate = new Date(startMonday);
+    weekDate.setDate(weekDate.getDate() + i * 7);
+
+    weeks.push({
+      weekNumber: i + 1,
+      startDate: toDateStr(weekDate),
+      targetVolumeKm: buildVolumes[i],
+      longRunKm: longRuns[i],
+      backToBack: backToBackFlags[i],
+      phase: buildPhases[i],
+      cycleNumber: cycleNumbers[i],
+      weekInCycle: weekInCycles[i],
+    });
+  }
+
+  // Taper weeks (4 weeks: 25-28)
   for (let i = 0; i < taperWeekCount; i++) {
-    const weekDate = new Date(nextMonday);
+    const weekDate = new Date(startMonday);
     weekDate.setDate(weekDate.getDate() + (buildPhaseWeeks + i) * 7);
     const taperVolume = Math.round(actualPeak * taperSchedule[i] * 10) / 10;
-    const longRun = getLongRunKm(taperVolume, config.raceDistanceKm, "taper");
+
+    // Taper long runs: progressive reduction
+    let taperLongRun: number;
+    if (i === 0) {
+      taperLongRun = Math.round(actualPeak * 0.25 * 10) / 10; // ~18 km
+    } else if (i === 1) {
+      taperLongRun = Math.round(actualPeak * 0.18 * 10) / 10; // ~13 km
+    } else if (i === 2) {
+      taperLongRun = Math.round(actualPeak * 0.10 * 10) / 10; // ~7 km
+    } else {
+      taperLongRun = 0; // Race week - no long run
+    }
 
     weeks.push({
       weekNumber: buildPhaseWeeks + i + 1,
       startDate: toDateStr(weekDate),
       targetVolumeKm: taperVolume,
-      longRunKm: i < 2 ? longRun : Math.round(taperVolume * 0.2 * 10) / 10, // Last taper week: very short long run
+      longRunKm: taperLongRun,
       backToBack: false,
-      phase: "taper",
+      phase: i < taperWeekCount - 1 ? "taper" : "race",
       cycleNumber: null,
       weekInCycle: null,
     });
   }
-
-  // Race week
-  const raceWeekDate = new Date(nextMonday);
-  raceWeekDate.setDate(raceWeekDate.getDate() + (totalWeeks - 1) * 7);
-  const raceWeekVolume = Math.round(actualPeak * 0.25 * 10) / 10;
-  weeks.push({
-    weekNumber: totalWeeks,
-    startDate: toDateStr(raceWeekDate),
-    targetVolumeKm: raceWeekVolume,
-    longRunKm: 0, // Race is the long run!
-    backToBack: false,
-    phase: "race",
-    cycleNumber: null,
-    weekInCycle: null,
-  });
 
   // Compute average increment for metadata
   const buildOnlyVolumes = buildVolumes.filter((_, i) => buildPhases[i] === "build");
@@ -302,7 +329,7 @@ export function generatePlan(config: PlanConfig): GeneratedPlan {
     raceName: config.raceName || null,
     raceDate: config.raceDate,
     raceDistanceKm: config.raceDistanceKm,
-    startDate: toDateStr(nextMonday),
+    startDate: toDateStr(startMonday),
     startingVolumeKm: config.startingVolumeKm,
     peakVolumeKm: Math.round(actualPeak * 10) / 10,
     totalWeeks: weeks.length,

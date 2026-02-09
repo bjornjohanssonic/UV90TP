@@ -65,7 +65,7 @@ export default function WeeklyBreakdown({
 
   return (
     <div ref={containerRef}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
         <h2 style={{ color: COLORS.textDark, fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Weekly Breakdown</h2>
         {weeks.length > 4 && (
           <button onClick={onToggleShowAll} style={{
@@ -73,8 +73,8 @@ export default function WeeklyBreakdown({
             color: COLORS.primaryGreen,
             border: `2px solid ${COLORS.primaryGreen}`,
             borderRadius: "6px",
-            padding: "6px 12px",
-            fontSize: "0.75rem",
+            padding: "4px 10px",
+            fontSize: "0.7rem",
             cursor: "pointer",
             fontWeight: 600,
           }}>

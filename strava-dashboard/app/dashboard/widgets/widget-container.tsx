@@ -160,8 +160,8 @@ export default function WidgetContainer({
       {hovered && (
         <div style={{
           position: "absolute",
-          top: "-14px",
-          right: "-4px",
+          top: "8px",
+          right: "8px",
           zIndex: 100,
           display: "flex",
           alignItems: "center",

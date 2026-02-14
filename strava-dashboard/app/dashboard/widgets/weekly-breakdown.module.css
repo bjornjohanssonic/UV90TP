@@ -1,0 +1,81 @@
+/* ─── Weekly Breakdown Widget ─── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.title {
+  color: var(--color-text-dark);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.toggleButton {
+  background-color: transparent;
+  color: var(--color-primary-green);
+  border: 2px solid var(--color-primary-green);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.weekList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weekRow {
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.15s;
+}
+
+.weekLabel {
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distance {
+  color: var(--color-primary-green);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.time {
+  color: var(--color-text-dark);
+  font-size: 0.8rem;
+}
+
+.runs {
+  color: var(--color-text-dark);
+  font-size: 0.8rem;
+}
+
+.pace {
+  color: var(--color-text-dark);
+  font-size: 0.8rem;
+}
+
+.change {
+  font-size: 0.8rem;
+  text-align: right;
+  font-weight: 600;
+}
+
+.noChange {
+  color: var(--color-text-light);
+  font-size: 0.8rem;
+  text-align: right;
+}

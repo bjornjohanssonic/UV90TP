@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/dashboard-helpers";
 import type { WidgetConfig, WidgetId } from "./widget-types";
 import { WIDGET_REGISTRY } from "./widget-types";
+import styles from "./widget-container.module.css";
 
 interface WidgetContainerProps {
   config: WidgetConfig;
@@ -78,15 +79,18 @@ export default function WidgetContainer({
 
   const resizeStartRef = useRef({ x: 0, startSpan: 0 });
 
-  const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizing(true);
-    resizeStartRef.current = {
-      x: e.clientX,
-      startSpan: config.colSpan,
-    };
-  }, [config.colSpan]);
+  const handleResizeMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsResizing(true);
+      resizeStartRef.current = {
+        x: e.clientX,
+        startSpan: config.colSpan,
+      };
+    },
+    [config.colSpan],
+  );
 
   useEffect(() => {
     if (!isResizing) return;
@@ -99,7 +103,10 @@ export default function WidgetContainer({
       const colWidth = gridWidth / 12;
       const deltaX = e.clientX - resizeStartRef.current.x;
 
-      const newSpan = Math.max(minColSpan, Math.min(maxColSpan, resizeStartRef.current.startSpan + Math.round(deltaX / colWidth)));
+      const newSpan = Math.max(
+        minColSpan,
+        Math.min(maxColSpan, resizeStartRef.current.startSpan + Math.round(deltaX / colWidth)),
+      );
       setResizePreviewSpan(newSpan);
     };
 
@@ -125,6 +132,7 @@ export default function WidgetContainer({
   return (
     <div
       ref={containerRef}
+      className={styles.container}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -132,62 +140,28 @@ export default function WidgetContainer({
       onMouseLeave={() => setHovered(false)}
       style={{
         gridColumn: `span ${displaySpan}`,
-        position: "relative",
-        minWidth: 0,
         transition: isResizing ? "none" : "all 0.2s",
       }}
     >
       {/* Drop indicator - before */}
-      {isDragOver === "before" && (
-        <div style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "4px",
-          backgroundColor: COLORS.primaryGreen,
-          borderRadius: "2px",
-          zIndex: 100,
-        }} />
-      )}
+      {isDragOver === "before" && <div className={styles.dropIndicatorBefore} />}
 
-      {/* Widget content — no wrapper card */}
-      <div data-widget-inner style={{ position: "relative", width: "100%" }}>
+      {/* Widget content -- no wrapper card */}
+      <div data-widget-inner className={styles.widgetInner}>
         {children}
       </div>
 
-      {/* Hover controls — top-right move + close buttons */}
+      {/* Hover controls -- top-right move + close buttons */}
       {hovered && (
-        <div style={{
-          position: "absolute",
-          top: "8px",
-          right: "8px",
-          zIndex: 100,
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-        }}>
+        <div className={styles.hoverControls}>
           <div
             draggable
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "6px",
-              backgroundColor: COLORS.textDark,
-              color: COLORS.cardAccent,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "grab",
-              fontSize: "0.8rem",
-              fontWeight: 700,
-              opacity: 0.7,
-            }}
+            className={styles.dragHandle}
             title="Drag to reorder"
           >
-            ⋮⋮
+            &#x22ee;&#x22ee;
           </div>
           <button
             onMouseDown={(e) => e.stopPropagation()}
@@ -195,24 +169,10 @@ export default function WidgetContainer({
               e.stopPropagation();
               onRemove();
             }}
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "6px",
-              border: "none",
-              backgroundColor: COLORS.error,
-              color: COLORS.cardAccent,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              fontSize: "0.7rem",
-              fontWeight: 700,
-              opacity: 0.7,
-            }}
+            className={styles.closeButton}
             title="Hide widget"
           >
-            ✕
+            &#x2715;
           </button>
         </div>
       )}
@@ -220,66 +180,26 @@ export default function WidgetContainer({
       {/* Resize handle (right edge) - horizontal only */}
       <div
         onMouseDown={handleResizeMouseDown}
-        style={{
-          position: "absolute",
-          top: "50%",
-          right: 0,
-          transform: "translateY(-50%)",
-          width: "12px",
-          height: "48px",
-          cursor: "ew-resize",
-          zIndex: 100,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          opacity: hovered || isResizing ? 1 : 0,
-          transition: "opacity 0.2s",
-        }}
+        className={styles.resizeHandle}
+        style={{ opacity: hovered || isResizing ? 1 : 0 }}
       >
-        <div style={{
-          width: "4px",
-          height: "32px",
-          borderRadius: "2px",
-          backgroundColor: isResizing ? COLORS.primaryGreen : COLORS.textLight,
-          transition: "background-color 0.2s",
-        }} />
+        <div
+          className={styles.resizeHandleBar}
+          style={{
+            backgroundColor: isResizing ? COLORS.primaryGreen : COLORS.textLight,
+          }}
+        />
       </div>
 
       {/* Resize preview overlay */}
       {isResizing && resizePreviewSpan !== null && (
-        <div style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          backgroundColor: COLORS.primaryGreen,
-          color: COLORS.cardAccent,
-          padding: "8px 16px",
-          borderRadius: "8px",
-          fontSize: "0.75rem",
-          fontWeight: 700,
-          zIndex: 101,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-          pointerEvents: "none",
-          whiteSpace: "nowrap",
-        }}>
+        <div className={styles.resizePreview}>
           {resizePreviewSpan}/12
         </div>
       )}
 
       {/* Drop indicator - after */}
-      {isDragOver === "after" && (
-        <div style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "4px",
-          backgroundColor: COLORS.primaryGreen,
-          borderRadius: "2px",
-          zIndex: 100,
-        }} />
-      )}
+      {isDragOver === "after" && <div className={styles.dropIndicatorAfter} />}
     </div>
   );
 }

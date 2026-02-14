@@ -1,68 +1,6 @@
-// ─── Types ──────────────────────────────────────────────────────────────────
+import type { Activity, WeekData, PersonalRecord, NextAction, PlanWeek, Plan } from "@/types";
 
-export interface Activity {
-  strava_id: string;
-  name: string;
-  type: string;
-  distance: number;
-  moving_time: number;
-  elapsed_time: number;
-  average_speed: number;
-  max_speed: number;
-  average_heartrate: number | null;
-  max_heartrate: number | null;
-  total_elevation_gain: number;
-  start_date: string;
-  suffer_score: number | null;
-}
-
-export interface PlanWeek {
-  week_number: number;
-  start_date: string;
-  target_volume_km: number;
-  long_run_km: number;
-  back_to_back: number;
-  phase: string;
-  cycle_number: number | null;
-  week_in_cycle: number | null;
-  actualVolumeKm: number;
-  runCount: number;
-  gymCount: number;
-}
-
-export interface Plan {
-  id: number;
-  name: string;
-  race_name: string | null;
-  race_date: string;
-  race_distance_km: number;
-  peak_volume_km: number;
-}
-
-export interface WeekData {
-  weekStart: string;
-  weekLabel: string;
-  totalDistance: number;
-  totalTime: number;
-  runs: number;
-  avgPace: number;
-  longestRun: number;
-  totalElevation: number;
-}
-
-export interface PersonalRecord {
-  label: string;
-  value: string;
-  activity: string;
-  date: string;
-}
-
-export interface NextAction {
-  icon: string;
-  action: string;
-  reason: string;
-  priority: "high" | "medium" | "low";
-}
+export type { Activity, WeekData, PersonalRecord, NextAction, PlanWeek, Plan };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -197,7 +135,12 @@ export function computePRs(activities: Activity[]): PersonalRecord[] {
   const prs: PersonalRecord[] = [];
 
   const longest = runs.reduce((best, r) => (r.distance > best.distance ? r : best), runs[0]);
-  prs.push({ label: "Longest Run", value: `${formatKm(longest.distance)} km`, activity: longest.name, date: formatDate(longest.start_date) });
+  prs.push({
+    label: "Longest Run",
+    value: `${formatKm(longest.distance)} km`,
+    activity: longest.name,
+    date: formatDate(longest.start_date),
+  });
 
   const paceRuns = runs.filter((r) => r.distance >= 1000);
   if (paceRuns.length > 0) {
@@ -206,21 +149,47 @@ export function computePRs(activities: Activity[]): PersonalRecord[] {
       const bestPace = best.moving_time / (best.distance / 1000);
       return pace < bestPace ? r : best;
     }, paceRuns[0]);
-    prs.push({ label: "Fastest Pace", value: `${formatPace(fastest.distance, fastest.moving_time)} /km`, activity: fastest.name, date: formatDate(fastest.start_date) });
+    prs.push({
+      label: "Fastest Pace",
+      value: `${formatPace(fastest.distance, fastest.moving_time)} /km`,
+      activity: fastest.name,
+      date: formatDate(fastest.start_date),
+    });
   }
 
-  const highestElev = runs.reduce((best, r) => r.total_elevation_gain > best.total_elevation_gain ? r : best, runs[0]);
+  const highestElev = runs.reduce(
+    (best, r) => (r.total_elevation_gain > best.total_elevation_gain ? r : best),
+    runs[0],
+  );
   if (highestElev.total_elevation_gain > 0) {
-    prs.push({ label: "Most Elevation", value: `${Math.round(highestElev.total_elevation_gain)} m`, activity: highestElev.name, date: formatDate(highestElev.start_date) });
+    prs.push({
+      label: "Most Elevation",
+      value: `${Math.round(highestElev.total_elevation_gain)} m`,
+      activity: highestElev.name,
+      date: formatDate(highestElev.start_date),
+    });
   }
 
-  const longestTime = runs.reduce((best, r) => r.moving_time > best.moving_time ? r : best, runs[0]);
-  prs.push({ label: "Longest Time", value: formatTime(longestTime.moving_time), activity: longestTime.name, date: formatDate(longestTime.start_date) });
+  const longestTime = runs.reduce((best, r) => (r.moving_time > best.moving_time ? r : best), runs[0]);
+  prs.push({
+    label: "Longest Time",
+    value: formatTime(longestTime.moving_time),
+    activity: longestTime.name,
+    date: formatDate(longestTime.start_date),
+  });
 
   const hrRuns = runs.filter((r) => r.max_heartrate);
   if (hrRuns.length > 0) {
-    const maxHr = hrRuns.reduce((best, r) => (r.max_heartrate || 0) > (best.max_heartrate || 0) ? r : best, hrRuns[0]);
-    prs.push({ label: "Max Heart Rate", value: `${Math.round(maxHr.max_heartrate!)} bpm`, activity: maxHr.name, date: formatDate(maxHr.start_date) });
+    const maxHr = hrRuns.reduce(
+      (best, r) => ((r.max_heartrate || 0) > (best.max_heartrate || 0) ? r : best),
+      hrRuns[0],
+    );
+    prs.push({
+      label: "Max Heart Rate",
+      value: `${Math.round(maxHr.max_heartrate!)} bpm`,
+      activity: maxHr.name,
+      date: formatDate(maxHr.start_date),
+    });
   }
 
   return prs;
@@ -233,7 +202,7 @@ export function generateNextActions(
   weeks: WeekData[],
   activities: Activity[],
   planWeek: PlanWeek | null,
-  hasPlan: boolean
+  hasPlan: boolean,
 ): NextAction[] {
   const actions: NextAction[] = [];
   const dayOfWeek = getDayOfWeek();
@@ -243,9 +212,7 @@ export function generateNextActions(
   today.setHours(0, 0, 0, 0);
 
   const recentWeeks = weeks.slice(0, 4).filter((w) => w.runs > 0);
-  const avgPace4w = recentWeeks.length > 0
-    ? recentWeeks.reduce((s, w) => s + w.avgPace, 0) / recentWeeks.length
-    : 0;
+  const avgPace4w = recentWeeks.length > 0 ? recentWeeks.reduce((s, w) => s + w.avgPace, 0) / recentWeeks.length : 0;
   const paceStr = avgPace4w > 0 ? formatPace(1000, avgPace4w) : "easy";
 
   let consecutiveDays = 0;
@@ -442,7 +409,7 @@ export function generateNextActions(
     }
   }
 
-  if (consecutiveDays >= 3 && !actions.some(a => a.icon === "🛌")) {
+  if (consecutiveDays >= 3 && !actions.some((a) => a.icon === "🛌")) {
     actions.push({
       icon: "💡",
       action: "Consider a rest day tomorrow",

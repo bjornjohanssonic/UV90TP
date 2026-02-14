@@ -1,13 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
-import {
-  WIDGET_REGISTRY,
-  DEFAULT_LAYOUT,
-  LAYOUT_STORAGE_KEY,
-  type WidgetId,
-  type WidgetConfig,
-} from "./widget-types";
+import { WIDGET_REGISTRY, DEFAULT_LAYOUT, LAYOUT_STORAGE_KEY, type WidgetId, type WidgetConfig } from "./widget-types";
 
 // ─── Registry / Layout consistency ──────────────────────────────────────────
 

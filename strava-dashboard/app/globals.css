@@ -1,0 +1,77 @@
+/* ─── CSS Custom Properties (matching COLORS in dashboard-helpers.ts) ─── */
+:root {
+  --color-bg: #e8e4db;
+  --color-card-bg: #d6d0c4;
+  --color-card-alt: #cec7b9;
+  --color-card-accent: #f5f0e8;
+  --color-border: #c4bda8;
+  --color-text-dark: #2c2a25;
+  --color-text-muted: #6b6558;
+  --color-text-light: #948d7c;
+  --color-primary-green: #5a8a6a;
+  --color-accent-green: #7bab8a;
+  --color-warm-gold: #c8956c;
+  --color-dark-gold: #a67542;
+  --color-success: #4a8c5c;
+  --color-error: #c0564f;
+  --color-warning: #c8956c;
+
+  /* Phase colors */
+  --phase-build: #5a8a6a;
+  --phase-recovery: #7bab8a;
+  --phase-plateau: #c8956c;
+  --phase-taper: #8b7ec8;
+}
+
+/* ─── Base Reset ─── */
+body {
+  margin: 0;
+  background-color: #0a0a0a;
+  color: #ededed;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ─── Keyframes ─── */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── Utility: text truncation ─── */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Utility: stat label ─── */
+.stat-label {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+/* ─── Utility: stat value ─── */
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* ─── Utility: card ─── */
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: 12px;
+  padding: 18px;
+  border: 2px solid var(--color-border);
+}
+
+.card-accent {
+  background-color: var(--color-card-accent);
+  border-radius: 16px;
+  border: 3px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}

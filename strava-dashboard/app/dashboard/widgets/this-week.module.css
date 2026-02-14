@@ -1,0 +1,139 @@
+/* ─── This Week Widget ─── */
+
+.container {
+  background-color: var(--color-card-accent);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  border: 3px solid var(--color-border);
+}
+
+/* Header bar - gradient background is dynamic */
+.header {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerTitle {
+  color: var(--color-card-accent);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.headerBadge {
+  color: var(--color-card-accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+}
+
+/* Content area */
+.content {
+  padding: 24px;
+}
+
+.contentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
+.contentTitle {
+  color: var(--color-text-dark);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Phase badge inside content title - color is dynamic */
+.phaseBadge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* Week change badge - color is dynamic based on positive/negative */
+.weekChangeBadge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Stats grid */
+.statsGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.statsGridDefault {
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+
+.statsGridWithPlan {
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+/* Stat card - border color may be dynamic */
+.statCard {
+  padding: 14px;
+  border-radius: 12px;
+  background-color: var(--color-card-alt);
+  border: 2px solid var(--color-border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Plan-specific stat card with dynamic border color */
+.planStatCard {
+  background-color: var(--color-card-alt);
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.statLabel {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+/* Stat value - color is dynamic */
+.statValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.b2bLabel {
+  font-size: 0.65rem;
+  color: var(--color-error);
+  margin-left: 6px;
+  font-weight: 700;
+}
+
+/* Progress bar */
+.progressBarTrack {
+  background-color: var(--color-card-alt);
+  border-radius: 12px;
+  height: 14px;
+  overflow: hidden;
+  margin-top: 20px;
+  border: 2px solid var(--color-border);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Progress bar fill - width and color are dynamic */
+.progressBarFill {
+  height: 100%;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}

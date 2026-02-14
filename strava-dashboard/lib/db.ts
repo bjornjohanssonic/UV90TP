@@ -15,7 +15,7 @@ function getDb(): Database.Database {
   return db;
 }
 
-function initTables(db: Database.Database): void {
+export function initTables(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,10 +83,14 @@ function initTables(db: Database.Database): void {
   // Migration: add columns if missing (existing DB)
   try {
     db.exec(`ALTER TABLE training_weeks ADD COLUMN long_run_km REAL NOT NULL DEFAULT 0`);
-  } catch { /* column already exists */ }
+  } catch {
+    /* column already exists */
+  }
   try {
     db.exec(`ALTER TABLE training_weeks ADD COLUMN back_to_back INTEGER NOT NULL DEFAULT 0`);
-  } catch { /* column already exists */ }
+  } catch {
+    /* column already exists */
+  }
 }
 
 export default getDb;

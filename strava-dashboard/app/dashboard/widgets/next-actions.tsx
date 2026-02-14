@@ -1,4 +1,6 @@
-import { COLORS, type NextAction } from "@/lib/dashboard-helpers";
+import type { NextAction } from "@/types";
+import { COLORS } from "@/lib/dashboard-helpers";
+import styles from "./next-actions.module.css";
 
 interface NextActionsProps {
   actions: NextAction[];
@@ -6,34 +8,17 @@ interface NextActionsProps {
 
 export default function NextActions({ actions }: NextActionsProps) {
   return (
-    <div style={{
-      backgroundColor: COLORS.cardAccent,
-      borderRadius: "20px",
-      overflow: "hidden",
-      border: `3px solid ${COLORS.primaryGreen}`,
-      boxShadow: "0 6px 20px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06)",
-    }}>
+    <div className={styles.container}>
       {/* Header */}
-      <div style={{
-        background: `linear-gradient(135deg, ${COLORS.primaryGreen} 0%, ${COLORS.accentGreen} 100%)`,
-        padding: "16px 24px",
-      }}>
-        <h2 style={{
-          color: COLORS.cardAccent,
-          fontSize: "1.3rem",
-          fontWeight: 700,
-          margin: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}>
-          <span style={{ fontSize: "1.5rem" }}>✓</span>
+      <div className={styles.header}>
+        <h2 className={styles.headerTitle}>
+          <span className={styles.headerIcon}>&#x2713;</span>
           Next Actions
         </h2>
       </div>
 
       {/* Actions list */}
-      <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div className={styles.actionsList}>
         {actions.map((action, i) => {
           const priorityColors = {
             high: { bg: COLORS.cardAlt, border: COLORS.error, text: COLORS.error },
@@ -43,55 +28,27 @@ export default function NextActions({ actions }: NextActionsProps) {
           const colors = priorityColors[action.priority];
 
           return (
-            <div key={i} style={{
-              backgroundColor: colors.bg,
-              borderRadius: "14px",
-              padding: "18px",
-              border: `2px solid ${colors.border}`,
-              display: "flex",
-              gap: "16px",
-              alignItems: "flex-start",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-            }}>
-              <span style={{ fontSize: "2rem", lineHeight: 1 }}>{action.icon}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: "8px",
-                }}>
-                  <div style={{
-                    color: COLORS.textDark,
-                    fontWeight: 700,
-                    fontSize: "1rem",
-                    lineHeight: 1.4,
-                  }}>
-                    {action.action}
-                  </div>
-                  <span style={{
-                    color: colors.text,
-                    fontSize: "0.65rem",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    padding: "4px 10px",
-                    backgroundColor: `${colors.text}20`,
-                    borderRadius: "8px",
-                    marginLeft: "12px",
-                    whiteSpace: "nowrap",
-                    border: `1px solid ${colors.text}40`,
-                  }}>
+            <div
+              key={i}
+              className={styles.actionCard}
+              style={{ border: `2px solid ${colors.border}` }}
+            >
+              <span className={styles.actionIcon}>{action.icon}</span>
+              <div className={styles.actionContent}>
+                <div className={styles.actionHeader}>
+                  <div className={styles.actionTitle}>{action.action}</div>
+                  <span
+                    className={styles.priorityBadge}
+                    style={{
+                      color: colors.text,
+                      backgroundColor: `${colors.text}20`,
+                      border: `1px solid ${colors.text}40`,
+                    }}
+                  >
                     {action.priority}
                   </span>
                 </div>
-                <div style={{
-                  color: COLORS.textMuted,
-                  fontSize: "0.88rem",
-                  lineHeight: 1.5,
-                }}>
-                  {action.reason}
-                </div>
+                <div className={styles.actionReason}>{action.reason}</div>
               </div>
             </div>
           );

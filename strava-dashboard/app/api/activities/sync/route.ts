@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server";
 import axios from "axios";
-import getDb from "@/lib/db";
 import { refreshAccessToken } from "@/lib/strava";
+import { getMostRecentActivityDate, getActivitySplits, upsertActivity } from "@/lib/repositories";
+import { getAuthenticatedAthleteId } from "@/lib/session";
 
 interface StravaActivity {
   id: number;
@@ -20,12 +20,12 @@ interface StravaActivity {
   splits_metric?: unknown[];
 }
 
-export async function POST(request: NextRequest) {
-  const { athleteId } = await request.json();
+export async function POST() {
+  const athleteId = await getAuthenticatedAthleteId();
 
   if (!athleteId) {
-    return new Response(JSON.stringify({ error: "athleteId required" }), {
-      status: 400,
+    return new Response(JSON.stringify({ error: "Not authenticated" }), {
+      status: 401,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -39,15 +39,9 @@ export async function POST(request: NextRequest) {
 
       try {
         const accessToken = await refreshAccessToken(athleteId);
-        const db = getDb();
 
-        // Get the most recent activity date for incremental sync
-        const mostRecent = db
-          .prepare("SELECT start_date FROM activities ORDER BY start_date DESC LIMIT 1")
-          .get() as { start_date: string } | undefined;
+        const mostRecent = getMostRecentActivityDate();
 
-        // If we have activities, sync from 1 day before the most recent (to catch any edge cases)
-        // Otherwise start from Aug 1, 2025. UPSERT handles duplicates gracefully.
         const after = mostRecent
           ? Math.floor((new Date(mostRecent.start_date).getTime() - 24 * 60 * 60 * 1000) / 1000)
           : Math.floor(new Date("2025-08-01T00:00:00Z").getTime() / 1000);
@@ -58,37 +52,25 @@ export async function POST(request: NextRequest) {
         let total = 0;
         let rateLimited = false;
 
-        const upsertStmt = db.prepare(
-          `INSERT INTO activities (strava_id, name, type, distance, moving_time, elapsed_time,
-            average_speed, max_speed, average_heartrate, max_heartrate,
-            total_elevation_gain, start_date, suffer_score, splits)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(strava_id) DO UPDATE SET
-             name = excluded.name, type = excluded.type, distance = excluded.distance,
-             moving_time = excluded.moving_time, elapsed_time = excluded.elapsed_time,
-             average_speed = excluded.average_speed, max_speed = excluded.max_speed,
-             average_heartrate = excluded.average_heartrate, max_heartrate = excluded.max_heartrate,
-             total_elevation_gain = excluded.total_elevation_gain, start_date = excluded.start_date,
-             suffer_score = excluded.suffer_score, splits = excluded.splits`
-        );
-
         send({ type: "status", message: "Fetching activity list from Strava..." });
 
         while (!rateLimited) {
           let activities: StravaActivity[];
           try {
-            const response = await axios.get<StravaActivity[]>(
-              "https://www.strava.com/api/v3/athlete/activities",
-              {
-                headers: { Authorization: `Bearer ${accessToken}` },
-                params: { after, page, per_page: perPage },
-              }
-            );
+            const response = await axios.get<StravaActivity[]>("https://www.strava.com/api/v3/athlete/activities", {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              params: { after, page, per_page: perPage },
+            });
             activities = response.data;
           } catch (err) {
             if (axios.isAxiosError(err) && err.response?.status === 429) {
               rateLimited = true;
-              send({ type: "rate_limit", synced, total, message: "Rate limit reached. Progress has been saved." });
+              send({
+                type: "rate_limit",
+                synced,
+                total,
+                message: "Rate limit reached. Progress has been saved.",
+              });
               break;
             }
             throw err;
@@ -96,46 +78,52 @@ export async function POST(request: NextRequest) {
 
           if (activities.length === 0) break;
 
-          send({ type: "status", message: `Found ${(page - 1) * perPage + activities.length} activities. Fetching details...` });
+          send({
+            type: "status",
+            message: `Found ${(page - 1) * perPage + activities.length} activities. Fetching details...`,
+          });
 
           for (const act of activities) {
-            const existing = db
-              .prepare("SELECT strava_id, splits FROM activities WHERE strava_id = ?")
-              .get(String(act.id)) as { strava_id: string; splits: string | null } | undefined;
+            const existing = getActivitySplits(String(act.id));
 
             let splitsJson: string | null = null;
 
             if (!existing?.splits) {
               try {
-                const detail = await axios.get<StravaActivity>(
-                  `https://www.strava.com/api/v3/activities/${act.id}`,
-                  { headers: { Authorization: `Bearer ${accessToken}` } }
-                );
+                const detail = await axios.get<StravaActivity>(`https://www.strava.com/api/v3/activities/${act.id}`, {
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                });
                 if (detail.data.splits_metric) {
                   splitsJson = JSON.stringify(detail.data.splits_metric);
                 }
               } catch (err) {
                 if (axios.isAxiosError(err) && err.response?.status === 429) {
                   rateLimited = true;
-                  // Still save this activity without splits
                 }
-                // Other errors: save without splits
               }
               synced++;
             } else {
               splitsJson = existing.splits;
             }
 
-            upsertStmt.run(
-              String(act.id), act.name, act.type, act.distance,
-              act.moving_time, act.elapsed_time, act.average_speed, act.max_speed,
-              act.average_heartrate ?? null, act.max_heartrate ?? null,
-              act.total_elevation_gain, act.start_date, act.suffer_score ?? null,
-              splitsJson
-            );
+            upsertActivity({
+              strava_id: String(act.id),
+              name: act.name,
+              type: act.type,
+              distance: act.distance,
+              moving_time: act.moving_time,
+              elapsed_time: act.elapsed_time,
+              average_speed: act.average_speed,
+              max_speed: act.max_speed,
+              average_heartrate: act.average_heartrate ?? null,
+              max_heartrate: act.max_heartrate ?? null,
+              total_elevation_gain: act.total_elevation_gain,
+              start_date: act.start_date,
+              suffer_score: act.suffer_score ?? null,
+              splits: splitsJson,
+            });
             total++;
 
-            // Send progress every activity
             send({
               type: "progress",
               synced,
@@ -151,9 +139,21 @@ export async function POST(request: NextRequest) {
         }
 
         if (rateLimited) {
-          send({ type: "done", synced, total, rateLimited: true, message: `Saved ${total} activities. Rate limit hit — run sync again in ~15 min to fetch remaining details.` });
+          send({
+            type: "done",
+            synced,
+            total,
+            rateLimited: true,
+            message: `Saved ${total} activities. Rate limit hit — run sync again in ~15 min to fetch remaining details.`,
+          });
         } else {
-          send({ type: "done", synced, total, rateLimited: false, message: `Synced ${total} activities (${synced} detail fetches).` });
+          send({
+            type: "done",
+            synced,
+            total,
+            rateLimited: false,
+            message: `Synced ${total} activities (${synced} detail fetches).`,
+          });
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Sync failed";

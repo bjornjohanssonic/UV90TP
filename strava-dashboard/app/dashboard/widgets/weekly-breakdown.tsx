@@ -1,10 +1,9 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import {
-  COLORS, formatKm, formatTime, formatPace,
-  type WeekData,
-} from "@/lib/dashboard-helpers";
+import type { WeekData } from "@/types";
+import { COLORS, formatKm, formatTime, formatPace } from "@/lib/dashboard-helpers";
+import styles from "./weekly-breakdown.module.css";
 
 interface WeeklyBreakdownProps {
   weeks: WeekData[];
@@ -65,41 +64,31 @@ export default function WeeklyBreakdown({
 
   return (
     <div ref={containerRef}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-        <h2 style={{ color: COLORS.textDark, fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Weekly Breakdown</h2>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Weekly Breakdown</h2>
         {weeks.length > 4 && (
-          <button onClick={onToggleShowAll} style={{
-            backgroundColor: "transparent",
-            color: COLORS.primaryGreen,
-            border: `2px solid ${COLORS.primaryGreen}`,
-            borderRadius: "6px",
-            padding: "4px 10px",
-            fontSize: "0.7rem",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}>
+          <button onClick={onToggleShowAll} className={styles.toggleButton}>
             {showAllWeeks ? "Show less" : `Show all ${weeks.length} weeks`}
           </button>
         )}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className={styles.weekList}>
         {(showAllWeeks ? weeks : weeks.slice(0, 4)).map((w, i) => {
           const prevWeek = weeks[i + 1];
-          const change = prevWeek && prevWeek.totalDistance > 0 ? ((w.totalDistance - prevWeek.totalDistance) / prevWeek.totalDistance) * 100 : 0;
+          const change =
+            prevWeek && prevWeek.totalDistance > 0
+              ? ((w.totalDistance - prevWeek.totalDistance) / prevWeek.totalDistance) * 100
+              : 0;
           const isSelected = selectedWeekStart === w.weekStart;
           const isFirst = i === 0;
           return (
             <div
               key={w.weekStart}
               onClick={() => onSelectWeek?.(w.weekStart)}
+              className={styles.weekRow}
               style={{
                 backgroundColor: isSelected ? `${COLORS.primaryGreen}15` : isFirst ? COLORS.cardAccent : COLORS.cardBg,
-                borderRadius: "12px",
-                padding: "14px 18px",
-                display: "grid",
                 gridTemplateColumns: gridTemplate,
-                alignItems: "center",
-                gap: "8px",
                 border: isSelected
                   ? `2px solid ${COLORS.primaryGreen}`
                   : isFirst
@@ -107,44 +96,45 @@ export default function WeeklyBreakdown({
                     : `2px solid ${COLORS.border}`,
                 boxShadow: isFirst ? "0 3px 10px rgba(0,0,0,0.08)" : "0 2px 4px rgba(0,0,0,0.04)",
                 cursor: onSelectWeek ? "pointer" : "default",
-                transition: "background-color 0.15s",
-              }}>
-              <span style={{
-                color: isFirst ? COLORS.textDark : COLORS.textMuted,
-                fontSize: "0.85rem",
-                fontWeight: isFirst ? 700 : 500,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}>
+              }}
+            >
+              <span
+                className={styles.weekLabel}
+                style={{
+                  color: isFirst ? COLORS.textDark : COLORS.textMuted,
+                  fontWeight: isFirst ? 700 : 500,
+                }}
+              >
                 {w.weekLabel}
               </span>
-              <span style={{ color: COLORS.primaryGreen, fontSize: "0.9rem", fontWeight: 700 }}>
+              <span className={styles.distance}>
                 {formatKm(w.totalDistance)} km
               </span>
               {cols.time && (
-                <span style={{ color: COLORS.textDark, fontSize: "0.8rem" }}>{formatTime(w.totalTime)}</span>
+                <span className={styles.time}>{formatTime(w.totalTime)}</span>
               )}
               {cols.runs && (
-                <span style={{ color: COLORS.textDark, fontSize: "0.8rem" }}>{w.runs} run{w.runs !== 1 ? "s" : ""}</span>
+                <span className={styles.runs}>
+                  {w.runs} run{w.runs !== 1 ? "s" : ""}
+                </span>
               )}
               {cols.pace && (
-                <span style={{ color: COLORS.textDark, fontSize: "0.8rem" }}>{formatPace(w.totalDistance, w.totalTime)} /km</span>
+                <span className={styles.pace}>
+                  {formatPace(w.totalDistance, w.totalTime)} /km
+                </span>
               )}
-              {cols.change && (
-                prevWeek ? (
-                  <span style={{
-                    color: change >= 0 ? COLORS.success : COLORS.error,
-                    fontSize: "0.8rem",
-                    textAlign: "right",
-                    fontWeight: 600,
-                  }}>
-                    {change >= 0 ? "↑" : "↓"}{Math.abs(change).toFixed(0)}%
+              {cols.change &&
+                (prevWeek ? (
+                  <span
+                    className={styles.change}
+                    style={{ color: change >= 0 ? COLORS.success : COLORS.error }}
+                  >
+                    {change >= 0 ? "\u2191" : "\u2193"}
+                    {Math.abs(change).toFixed(0)}%
                   </span>
                 ) : (
-                  <span style={{ color: COLORS.textLight, fontSize: "0.8rem", textAlign: "right" }}>—</span>
-                )
-              )}
+                  <span className={styles.noChange}>&mdash;</span>
+                ))}
             </div>
           );
         })}

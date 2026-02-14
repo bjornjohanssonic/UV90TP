@@ -1,0 +1,53 @@
+/* ─── RaceDay widget ─── */
+
+.container {
+  background-color: var(--color-card-accent);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 3px solid var(--color-warm-gold);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.raceName {
+  color: var(--color-text-dark);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.raceDate {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.rightSection {
+  text-align: right;
+}
+
+.countdown {
+  color: var(--color-card-accent);
+  font-size: 2rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.countdownLabel {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: 600;
+}

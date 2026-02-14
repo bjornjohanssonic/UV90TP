@@ -3,10 +3,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const clientId = process.env.STRAVA_CLIENT_ID;
   if (!clientId) {
-    return NextResponse.json(
-      { error: "STRAVA_CLIENT_ID not configured" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "STRAVA_CLIENT_ID not configured" }, { status: 500 });
   }
 
   const params = new URLSearchParams({
@@ -16,7 +13,5 @@ export async function GET() {
     scope: "read_all,activity:read_all",
   });
 
-  return NextResponse.redirect(
-    `https://www.strava.com/oauth/authorize?${params.toString()}`
-  );
+  return NextResponse.redirect(`https://www.strava.com/oauth/authorize?${params.toString()}`);
 }

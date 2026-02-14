@@ -1,37 +1,6 @@
-export interface PlanConfig {
-  raceName?: string;
-  raceDate: string;
-  raceDistanceKm: number;
-  startingVolumeKm: number;
-  startingLongRunKm?: number; // Optional: specify starting long run capability
-  peakVolumeKm?: number; // Optional: override auto-calculated peak volume
-  totalWeeks?: number; // Optional: force specific plan duration
-}
+import type { PlanConfig, GeneratedWeek, GeneratedPlan } from "@/types";
 
-export interface GeneratedWeek {
-  weekNumber: number;
-  startDate: string;
-  targetVolumeKm: number;
-  longRunKm: number;
-  backToBack: boolean; // true = back-to-back long run weekend planned
-  phase: "build" | "recovery" | "taper" | "race";
-  cycleNumber: number | null;
-  weekInCycle: number | null;
-}
-
-export interface GeneratedPlan {
-  name: string;
-  raceName: string | null;
-  raceDate: string;
-  raceDistanceKm: number;
-  startDate: string;
-  startingVolumeKm: number;
-  peakVolumeKm: number;
-  totalWeeks: number;
-  buildIncrement: number;
-  recoveryFactor: number;
-  weeks: GeneratedWeek[];
-}
+export type { PlanConfig, GeneratedWeek, GeneratedPlan };
 
 function getMondayBefore(dateStr: string): Date {
   const d = new Date(dateStr + "T00:00:00");
@@ -57,7 +26,7 @@ function toDateStr(d: Date): string {
 function getWeeklyIncreaseKm(currentVolumeKm: number): number {
   let pct: number;
   if (currentVolumeKm < 30) {
-    pct = 0.10; // 10% at low volume
+    pct = 0.1; // 10% at low volume
   } else if (currentVolumeKm < 45) {
     pct = 0.08; // 8% in mid range
   } else if (currentVolumeKm < 60) {
@@ -86,7 +55,7 @@ function getLongRunKm(weeklyVolumeKm: number, raceDistanceKm: number, phase: str
   if (weeklyVolumeKm < 30) {
     longRunPct = 0.28;
   } else if (weeklyVolumeKm < 50) {
-    longRunPct = 0.30;
+    longRunPct = 0.3;
   } else if (weeklyVolumeKm < 65) {
     longRunPct = 0.32;
   } else {
@@ -130,7 +99,7 @@ function computePeakVolume(raceDistanceKm: number, startingVolumeKm: number): nu
 
 export function generatePlan(config: PlanConfig): GeneratedPlan {
   // 4-week taper (weeks 25-28)
-  const taperSchedule = [0.70, 0.55, 0.35, 0.20]; // 4-week taper
+  const taperSchedule = [0.7, 0.55, 0.35, 0.2]; // 4-week taper
   const taperWeekCount = taperSchedule.length;
 
   const raceWeekMonday = getMondayBefore(config.raceDate);
@@ -144,9 +113,7 @@ export function generatePlan(config: PlanConfig): GeneratedPlan {
   if (config.totalWeeks) {
     totalWeeks = config.totalWeeks;
   } else {
-    totalWeeks = Math.round(
-      (raceWeekMonday.getTime() - startMonday.getTime()) / (7 * 24 * 60 * 60 * 1000)
-    ) + 1; // +1 because race week is included
+    totalWeeks = Math.round((raceWeekMonday.getTime() - startMonday.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1; // +1 because race week is included
   }
 
   // Need at least taper + race week + 4 build weeks
@@ -224,7 +191,7 @@ export function generatePlan(config: PlanConfig): GeneratedPlan {
       } else if (recoveryWeeks.has(weekNum - 1)) {
         // Coming from recovery week: bump back up
         if (!isPlateauPhase) {
-          const increase = Math.min(5, currentVolume * 0.10);
+          const increase = Math.min(5, currentVolume * 0.1);
           currentVolume += increase;
           currentVolume = Math.min(currentVolume, peakVolumeKm);
         } else {
@@ -293,7 +260,7 @@ export function generatePlan(config: PlanConfig): GeneratedPlan {
     } else if (i === 1) {
       taperLongRun = Math.round(actualPeak * 0.18 * 10) / 10; // ~13 km
     } else if (i === 2) {
-      taperLongRun = Math.round(actualPeak * 0.10 * 10) / 10; // ~7 km
+      taperLongRun = Math.round(actualPeak * 0.1 * 10) / 10; // ~7 km
     } else {
       taperLongRun = 0; // Race week - no long run
     }
@@ -323,9 +290,7 @@ export function generatePlan(config: PlanConfig): GeneratedPlan {
   const avgIncrement = increaseCount > 0 ? totalPctIncrease / increaseCount : 0;
 
   return {
-    name: config.raceName
-      ? `${config.raceName} Training Plan`
-      : `${config.raceDistanceKm}km Race Plan`,
+    name: config.raceName ? `${config.raceName} Training Plan` : `${config.raceDistanceKm}km Race Plan`,
     raceName: config.raceName || null,
     raceDate: config.raceDate,
     raceDistanceKm: config.raceDistanceKm,

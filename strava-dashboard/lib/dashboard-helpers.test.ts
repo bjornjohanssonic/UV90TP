@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import type { Activity, PlanWeek } from "@/types";
 import {
   getMonday,
   formatKm,
@@ -13,9 +14,6 @@ import {
   aggregateWeeks,
   computePRs,
   generateNextActions,
-  type Activity,
-  type WeekData,
-  type PlanWeek,
 } from "./dashboard-helpers";
 
 // ─── Helper factory ─────────────────────────────────────────────────────────
@@ -152,10 +150,21 @@ describe("weekLabel", () => {
 describe("COLORS", () => {
   it("has all required color keys", () => {
     const requiredKeys = [
-      "bg", "cardBg", "cardAlt", "cardAccent",
-      "primaryGreen", "accentGreen", "warmGold", "darkGold",
-      "textDark", "textMuted", "textLight", "border",
-      "success", "warning", "error",
+      "bg",
+      "cardBg",
+      "cardAlt",
+      "cardAccent",
+      "primaryGreen",
+      "accentGreen",
+      "warmGold",
+      "darkGold",
+      "textDark",
+      "textMuted",
+      "textLight",
+      "border",
+      "success",
+      "warning",
+      "error",
     ];
     for (const key of requiredKeys) {
       expect(COLORS).toHaveProperty(key);
@@ -197,7 +206,12 @@ describe("aggregateWeeks", () => {
   it("groups runs by week (Monday)", () => {
     const mon = makeActivity({ strava_id: "1", start_date: "2025-01-06T08:00:00Z", distance: 5000, moving_time: 1500 });
     const wed = makeActivity({ strava_id: "2", start_date: "2025-01-08T08:00:00Z", distance: 8000, moving_time: 2400 });
-    const nextMon = makeActivity({ strava_id: "3", start_date: "2025-01-13T08:00:00Z", distance: 6000, moving_time: 1800 });
+    const nextMon = makeActivity({
+      strava_id: "3",
+      start_date: "2025-01-13T08:00:00Z",
+      distance: 6000,
+      moving_time: 1800,
+    });
 
     const weeks = aggregateWeeks([mon, wed, nextMon]);
     expect(weeks).toHaveLength(2);

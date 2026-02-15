@@ -49,10 +49,7 @@ export function deactivateAllPlans(db: Database.Database = getDb()): void {
   db.prepare("UPDATE training_plans SET active = 0 WHERE active = 1").run();
 }
 
-export function createPlan(
-  generated: GeneratedPlan,
-  db: Database.Database = getDb(),
-): { planId: number | bigint } {
+export function createPlan(generated: GeneratedPlan, db: Database.Database = getDb()): { planId: number | bigint } {
   const result = db
     .prepare(
       `INSERT INTO training_plans (name, race_name, race_date, race_distance_km,
@@ -82,7 +79,17 @@ export function createPlan(
   );
 
   for (const w of generated.weeks) {
-    insertWeek.run(planId, w.weekNumber, w.startDate, w.targetVolumeKm, w.longRunKm, w.backToBack ? 1 : 0, w.phase, w.cycleNumber, w.weekInCycle);
+    insertWeek.run(
+      planId,
+      w.weekNumber,
+      w.startDate,
+      w.targetVolumeKm,
+      w.longRunKm,
+      w.backToBack ? 1 : 0,
+      w.phase,
+      w.cycleNumber,
+      w.weekInCycle,
+    );
   }
 
   return { planId };

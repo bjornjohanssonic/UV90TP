@@ -10,12 +10,14 @@ export function useSyncStream(onSyncComplete: () => Promise<void>) {
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [syncCount, setSyncCount] = useState(0);
+  const [newlySyncedIds, setNewlySyncedIds] = useState<string[]>([]);
 
   async function handleSync() {
     setSyncing(true);
     setSyncResult(null);
     setSyncStatus("Connecting to Strava...");
     setSyncCount(0);
+    const syncedIds: string[] = [];
 
     try {
       const res = await fetch("/api/activities/sync", {
@@ -50,9 +52,11 @@ export function useSyncStream(onSyncComplete: () => Promise<void>) {
             } else if (event.type === "progress") {
               setSyncCount(event.total);
               setSyncStatus(`Syncing: ${event.total} activities (${event.latest?.name || ""})`);
+              if (event.latest?.strava_id) syncedIds.push(event.latest.strava_id);
             } else if (event.type === "rate_limit") {
               setSyncStatus(null);
               setSyncResult({ message: event.message, type: "warning" });
+              await onSyncComplete();
             } else if (event.type === "done") {
               setSyncStatus(null);
               setSyncResult({
@@ -76,8 +80,13 @@ export function useSyncStream(onSyncComplete: () => Promise<void>) {
     } finally {
       setSyncing(false);
       setSyncStatus(null);
+      setNewlySyncedIds(syncedIds);
     }
   }
 
-  return { syncing, syncStatus, syncResult, syncCount, handleSync };
+  function clearSyncedIds() {
+    setNewlySyncedIds([]);
+  }
+
+  return { syncing, syncStatus, syncResult, syncCount, newlySyncedIds, clearSyncedIds, handleSync };
 }

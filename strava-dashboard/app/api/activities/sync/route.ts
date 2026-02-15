@@ -1,6 +1,6 @@
 import axios from "axios";
 import { refreshAccessToken } from "@/lib/strava";
-import { getMostRecentActivityDate, getActivitySplits, upsertActivity } from "@/lib/repositories";
+import { getMostRecentActivityDate, getActivitySplits, upsertActivity, countActivitiesMissingPolyline, getActivitiesMissingPolyline } from "@/lib/repositories";
 import { getAuthenticatedAthleteId } from "@/lib/session";
 
 interface StravaActivity {
@@ -18,6 +18,7 @@ interface StravaActivity {
   start_date: string;
   suffer_score?: number;
   splits_metric?: unknown[];
+  map?: { summary_polyline?: string };
 }
 
 export async function POST() {
@@ -42,8 +43,9 @@ export async function POST() {
 
         const mostRecent = getMostRecentActivityDate();
 
+        // Use most recent activity date when we have data, otherwise fetch from Aug 2025
         const after = mostRecent
-          ? Math.floor((new Date(mostRecent.start_date).getTime() - 24 * 60 * 60 * 1000) / 1000)
+          ? Math.floor(new Date(mostRecent.start_date).getTime() / 1000)
           : Math.floor(new Date("2025-08-01T00:00:00Z").getTime() / 1000);
 
         let page = 1;
@@ -87,8 +89,9 @@ export async function POST() {
             const existing = getActivitySplits(String(act.id));
 
             let splitsJson: string | null = null;
+            let summaryPolyline: string | null = null;
 
-            if (!existing?.splits) {
+            if (!existing?.splits || !existing?.summary_polyline || existing.summary_polyline === "") {
               try {
                 const detail = await axios.get<StravaActivity>(`https://www.strava.com/api/v3/activities/${act.id}`, {
                   headers: { Authorization: `Bearer ${accessToken}` },
@@ -96,14 +99,19 @@ export async function POST() {
                 if (detail.data.splits_metric) {
                   splitsJson = JSON.stringify(detail.data.splits_metric);
                 }
+                summaryPolyline = detail.data.map?.summary_polyline || null;
               } catch (err) {
                 if (axios.isAxiosError(err) && err.response?.status === 429) {
                   rateLimited = true;
                 }
               }
+              // Preserve existing data if detail fetch didn't return new data
+              if (!splitsJson && existing?.splits) splitsJson = existing.splits;
+              if (!summaryPolyline && existing?.summary_polyline) summaryPolyline = existing.summary_polyline;
               synced++;
             } else {
               splitsJson = existing.splits;
+              summaryPolyline = existing.summary_polyline;
             }
 
             upsertActivity({
@@ -121,6 +129,7 @@ export async function POST() {
               start_date: act.start_date,
               suffer_score: act.suffer_score ?? null,
               splits: splitsJson,
+              summary_polyline: summaryPolyline,
             });
             total++;
 
@@ -128,7 +137,7 @@ export async function POST() {
               type: "progress",
               synced,
               total,
-              latest: { name: act.name, type: act.type, distance: act.distance, start_date: act.start_date },
+              latest: { strava_id: String(act.id), name: act.name, type: act.type, distance: act.distance, start_date: act.start_date },
             });
 
             if (rateLimited) break;
@@ -138,13 +147,58 @@ export async function POST() {
           page++;
         }
 
+        // Polyline backfill pass: fetch details for activities missing polyline data
+        let backfilled = 0;
+        if (!rateLimited) {
+          const missingPolylines = getActivitiesMissingPolyline();
+          if (missingPolylines.length > 0) {
+            send({ type: "status", message: `Backfilling route data for ${missingPolylines.length} activities...` });
+            for (const { strava_id, name } of missingPolylines) {
+              try {
+                const detail = await axios.get<StravaActivity>(`https://www.strava.com/api/v3/activities/${strava_id}`, {
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                });
+                const summaryPolyline = detail.data.map?.summary_polyline || null;
+                const splitsJson = detail.data.splits_metric ? JSON.stringify(detail.data.splits_metric) : null;
+                if (summaryPolyline || splitsJson) {
+                  const existing = getActivitySplits(strava_id);
+                  upsertActivity({
+                    strava_id,
+                    name: detail.data.name,
+                    type: detail.data.type,
+                    distance: detail.data.distance,
+                    moving_time: detail.data.moving_time,
+                    elapsed_time: detail.data.elapsed_time,
+                    average_speed: detail.data.average_speed,
+                    max_speed: detail.data.max_speed,
+                    average_heartrate: detail.data.average_heartrate ?? null,
+                    max_heartrate: detail.data.max_heartrate ?? null,
+                    total_elevation_gain: detail.data.total_elevation_gain,
+                    start_date: detail.data.start_date,
+                    suffer_score: detail.data.suffer_score ?? null,
+                    splits: splitsJson || existing?.splits || null,
+                    summary_polyline: summaryPolyline || existing?.summary_polyline || null,
+                  });
+                  backfilled++;
+                }
+                send({ type: "status", message: `Backfilling routes: ${backfilled}/${missingPolylines.length} (${name})` });
+              } catch (err) {
+                if (axios.isAxiosError(err) && err.response?.status === 429) {
+                  rateLimited = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
         if (rateLimited) {
           send({
             type: "done",
             synced,
             total,
             rateLimited: true,
-            message: `Saved ${total} activities. Rate limit hit — run sync again in ~15 min to fetch remaining details.`,
+            message: `Saved ${total} activities${backfilled > 0 ? `, backfilled ${backfilled} routes` : ""}. Rate limit hit — next sync available around ${new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })}.`,
           });
         } else {
           send({
@@ -152,7 +206,7 @@ export async function POST() {
             synced,
             total,
             rateLimited: false,
-            message: `Synced ${total} activities (${synced} detail fetches).`,
+            message: `Synced ${total} activities (${synced} detail fetches${backfilled > 0 ? `, ${backfilled} routes backfilled` : ""}).`,
           });
         }
       } catch (err) {

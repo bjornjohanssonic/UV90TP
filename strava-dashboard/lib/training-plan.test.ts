@@ -40,18 +40,16 @@ describe("recovery week positions", () => {
 
     for (const weekNum of recoveryPositions) {
       const week = plan.weeks.find((w) => w.weekNumber === weekNum);
-      expect(week, 'week ' + weekNum + ' should exist').toBeDefined();
-      expect(week!.phase, 'week ' + weekNum + ' should be recovery').toBe("recovery");
+      expect(week, "week " + weekNum + " should exist").toBeDefined();
+      expect(week!.phase, "week " + weekNum + " should be recovery").toBe("recovery");
     }
   });
 
   it("non-recovery build weeks are not marked as recovery", () => {
     const plan = generatePlan(makeConfig({ totalWeeks: 28 }));
-    const buildWeeks = plan.weeks.filter(
-      (w) => w.weekNumber <= 24 && ![4, 8, 12, 16, 20].includes(w.weekNumber),
-    );
+    const buildWeeks = plan.weeks.filter((w) => w.weekNumber <= 24 && ![4, 8, 12, 16, 20].includes(w.weekNumber));
     for (const week of buildWeeks) {
-      expect(week.phase, 'week ' + week.weekNumber + ' should be build').toBe("build");
+      expect(week.phase, "week " + week.weekNumber + " should be build").toBe("build");
     }
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "./page.module.css";
+import * as motion from "motion/react-client";
 
 export default function Home() {
   const [checking, setChecking] = useState(true);
@@ -24,10 +24,10 @@ export default function Home() {
 
   if (checking || redirecting) {
     return (
-      <main className={styles.main}>
-        <div className={styles.spinner}>
-          <div className={styles.spinnerIcon} />
-          <p className={styles.spinnerText}>
+      <main className="flex flex-col items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-[3px] border-neutral-700 border-t-[#fc4c02] rounded-full animate-spin" />
+          <p className="text-neutral-500 text-sm">
             {redirecting ? "Redirecting to dashboard..." : "Checking session..."}
           </p>
         </div>
@@ -36,11 +36,20 @@ export default function Home() {
   }
 
   return (
-    <main className={styles.main}>
-      <h1 className={styles.title}>Strava Dashboard</h1>
-      <a href="/api/auth/login" className={styles.connectBtn}>
-        Connect with Strava
-      </a>
-    </main>
+    <motion.div
+      initial={{ opacity: 0, filter: "blur(8px)" }}
+      animate={{ opacity: 1, filter: "blur(0px)" }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <main className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-4xl font-light text-neutral-100 tracking-tight mb-8">Strava Dashboard</h1>
+        <a
+          href="/api/auth/login"
+          className="bg-[#fc4c02] hover:bg-[#e04400] text-white rounded-lg px-8 py-3.5 text-lg font-semibold no-underline transition-colors"
+        >
+          Connect with Strava
+        </a>
+      </main>
+    </motion.div>
   );
 }

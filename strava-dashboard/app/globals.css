@@ -1,26 +1,21 @@
-/* ─── CSS Custom Properties (matching COLORS in dashboard-helpers.ts) ─── */
-:root {
-  --color-bg: #e8e4db;
-  --color-card-bg: #d6d0c4;
-  --color-card-alt: #cec7b9;
-  --color-card-accent: #f5f0e8;
-  --color-border: #c4bda8;
-  --color-text-dark: #2c2a25;
-  --color-text-muted: #6b6558;
-  --color-text-light: #948d7c;
-  --color-primary-green: #5a8a6a;
-  --color-accent-green: #7bab8a;
-  --color-warm-gold: #c8956c;
-  --color-dark-gold: #a67542;
-  --color-success: #4a8c5c;
-  --color-error: #c0564f;
-  --color-warning: #c8956c;
+@import "tailwindcss";
+@source "../app/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
 
-  /* Phase colors */
-  --phase-build: #5a8a6a;
-  --phase-recovery: #7bab8a;
-  --phase-plateau: #c8956c;
-  --phase-taper: #8b7ec8;
+/* ─── Memoria Design System Custom Properties ─── */
+:root {
+  --color-bg: #0a0a0a;
+  --color-card-bg: rgba(163, 163, 163, 0.08);
+  --color-card-border: #262626;
+  --color-card-hover-border: #404040;
+  --color-text-primary: #ededed;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #737373;
+  --color-text-whisper: #525252;
+  --color-border: #262626;
+  --color-border-hover: #525252;
+  --color-surface: #171717;
+  --color-error: #f87171;
 }
 
 /* ─── Base Reset ─── */
@@ -28,8 +23,14 @@ body {
   margin: 0;
   background-color: #0a0a0a;
   color: #ededed;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
+/* ─── Leaflet / Tailwind conflict fix ─── */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
 
 /* ─── Keyframes ─── */
 @keyframes spin {
@@ -38,40 +39,25 @@ body {
   }
 }
 
-/* ─── Utility: text truncation ─── */
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* ─── Utility: stat label ─── */
-.stat-label {
-  color: var(--color-text-muted);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
-  font-weight: 700;
+@utility animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
 }
 
-/* ─── Utility: stat value ─── */
-.stat-value {
-  font-size: 1.3rem;
-  font-weight: 700;
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
-/* ─── Utility: card ─── */
-.card {
-  background-color: var(--color-card-bg);
-  border-radius: 12px;
-  padding: 18px;
-  border: 2px solid var(--color-border);
-}
-
-.card-accent {
-  background-color: var(--color-card-accent);
-  border-radius: 16px;
-  border: 3px solid var(--color-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+@utility animate-fade-out {
+  animation: fade-out 0.6s ease-out forwards;
 }

@@ -2,19 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { COLORS } from "@/lib/dashboard-helpers";
-import { type WidgetId, WIDGET_REGISTRY } from "./widgets/widget-types";
-import WidgetContainer from "./widgets/widget-container";
+import type { Activity } from "@/types";
 import ThisWeek from "./widgets/this-week";
-import RaceDay from "./widgets/race-day";
-import NextActionsWidget from "./widgets/next-actions";
-import WeeklyChart from "./widgets/weekly-chart";
-import GymAndPRs from "./widgets/gym-and-prs";
-import WeeklyBreakdown from "./widgets/weekly-breakdown";
 import WeekDetail from "./widgets/week-detail";
 import RecentRuns from "./widgets/recent-runs";
-import WidgetErrorBoundary from "./widgets/widget-error-boundary";
-import { useActivities, useTrainingPlan, useSyncStream, useWidgetLayout, useDashboardData } from "./hooks";
-import styles from "./page.module.css";
+import RunMap from "./widgets/run-map";
+import BatteryModal from "./widgets/battery-modal";
+import { useActivities, useTrainingPlan, useSyncStream, useDashboardData } from "./hooks";
 
 export default function Dashboard() {
   const { activities, loadActivities } = useActivities();
@@ -24,170 +18,119 @@ export default function Dashboard() {
     await Promise.all([loadActivities(), loadPlan()]);
   }, [loadActivities, loadPlan]);
 
-  const { syncing, syncStatus, syncResult, syncCount, handleSync } = useSyncStream(loadData);
-  const {
-    showWidgetMenu,
-    setShowWidgetMenu,
-    getOrderedVisibleWidgets,
-    getHiddenWidgets,
-    reorderWidget,
-    resizeWidget,
-    toggleWidgetVisibility,
-    resetLayout,
-  } = useWidgetLayout();
+  const { syncing, syncStatus, syncResult, syncCount, newlySyncedIds, clearSyncedIds, handleSync } = useSyncStream(loadData);
   const {
     weeks,
     currentWeek,
     weekChange,
+    sufferScoreChange,
     runs,
-    gymSessions,
     currentPlanWeek,
-    gymThisWeek,
-    last8,
-    last8Targets,
-    maxDist,
     nextActions,
-    prs,
     daysToRace,
   } = useDashboardData(activities, plan, planWeeks);
 
-  const [showAllWeeks, setShowAllWeeks] = useState(false);
   const [selectedWeekStart, setSelectedWeekStart] = useState<string | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [showBatteryModal, setShowBatteryModal] = useState(false);
+
+  // Show battery modal when sync completes with new activities
+  useEffect(() => {
+    if (!syncing && newlySyncedIds.length > 0) {
+      setShowBatteryModal(true);
+    }
+  }, [syncing, newlySyncedIds]);
+
+  const handleBatteryUpdate = useCallback(
+    (stravaId: string, start: number | null, end: number | null) => {
+      // Update local activities state so UI reflects the change immediately
+      loadActivities();
+    },
+    [loadActivities],
+  );
+
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadData().then(() => setLoaded(true));
   }, [loadData]);
 
-  // Auto-sync when no activities
+  // Auto-sync only when data has loaded and there are truly no activities
   useEffect(() => {
-    if (activities.length === 0 && !syncing) {
+    if (loaded && activities.length === 0 && !syncing) {
       handleSync();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activities.length]);
+  }, [loaded, activities.length]);
 
-  // ─── Render widget by ID ──────────────────────────────────────────────
-
-  function renderWidget(widgetId: WidgetId) {
-    switch (widgetId) {
-      case "thisWeek":
-        return currentWeek ? (
-          <ThisWeek currentWeek={currentWeek} currentPlanWeek={currentPlanWeek} weekChange={weekChange} />
-        ) : null;
-      case "raceDay":
-        return plan ? <RaceDay plan={plan} daysToRace={daysToRace} /> : null;
-      case "nextActions":
-        return nextActions.length > 0 ? <NextActionsWidget actions={nextActions} /> : null;
-      case "weeklyChart":
-        return last8.length > 1 ? <WeeklyChart last8={last8} last8Targets={last8Targets} maxDist={maxDist} /> : null;
-      case "gymAndPRs":
-        return <GymAndPRs gymThisWeek={gymThisWeek} prs={prs} />;
-      case "weeklyBreakdown":
-        return (
-          <WeeklyBreakdown
-            weeks={weeks}
-            showAllWeeks={showAllWeeks}
-            onToggleShowAll={() => setShowAllWeeks(!showAllWeeks)}
-            selectedWeekStart={selectedWeekStart}
-            onSelectWeek={(ws) => setSelectedWeekStart(selectedWeekStart === ws ? null : ws)}
-          />
-        );
-      case "weekDetail": {
-        const effectiveWeek = selectedWeekStart || (weeks.length > 0 ? weeks[0].weekStart : null);
-        return effectiveWeek ? <WeekDetail activities={activities} selectedWeekStart={effectiveWeek} /> : null;
-      }
-      case "recentRuns":
-        return <RecentRuns runs={runs} />;
-      default:
-        return null;
+  // Keep selected activity in sync with reloaded data
+  useEffect(() => {
+    if (activities.length === 0) return;
+    if (selectedActivity) {
+      // Refresh selected activity from reloaded data (e.g. after sync adds polyline)
+      const updated = activities.find((a) => a.strava_id === selectedActivity.strava_id);
+      if (updated && updated !== selectedActivity) setSelectedActivity(updated);
+    } else {
+      // Default: most recent run
+      const mostRecentRun = activities.find((a) => a.type === "Run");
+      if (mostRecentRun) setSelectedActivity(mostRecentRun);
     }
-  }
+  }, [activities, selectedActivity]);
+
+  // Clean up old localStorage keys from previous widget system
+  useEffect(() => {
+    localStorage.removeItem("widgetLayout_v2");
+    localStorage.removeItem("widgetLayout_v3");
+  }, []);
+
+  const effectiveWeekStart = selectedWeekStart || (weeks.length > 0 ? weeks[0].weekStart : null);
 
   // ─── JSX ──────────────────────────────────────────────────────────────
 
   return (
-    <main className={styles.main}>
+    <main className="max-w-[1400px] mx-auto p-8 min-h-screen">
       {/* Header */}
-      <div className={styles.header}>
-        <h1 className={styles.headerTitle}>Dashboard</h1>
-        <div className={styles.headerActions}>
-          <button
-            onClick={() => setShowWidgetMenu(!showWidgetMenu)}
-            className={styles.customizeBtn}
-            style={{
-              color: showWidgetMenu ? COLORS.cardAccent : COLORS.warmGold,
-              backgroundColor: showWidgetMenu ? COLORS.warmGold : "transparent",
-            }}
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-2.5">
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-light text-neutral-100 tracking-tight m-0">Dashboard</h1>
+          {plan && daysToRace > 0 && (
+            <span className="text-sm font-medium text-neutral-400 bg-neutral-800/60 px-3 py-1 rounded-lg border border-neutral-700">
+              {plan.race_name || `${plan.race_distance_km} km`} &middot; {daysToRace} days
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2.5 items-center">
+          <a
+            href="/training-plan"
+            className="border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-200 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
           >
-            ⚙️ Customize
-          </button>
-          <a href="/training-plan" className={styles.planLink}>
             Training Plan
           </a>
           <button
             onClick={handleSync}
             disabled={syncing}
-            className={styles.syncBtn}
-            style={{ backgroundColor: syncing ? COLORS.textLight : COLORS.primaryGreen }}
+            className="bg-neutral-200 text-neutral-900 hover:bg-neutral-300 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed border-none rounded-lg px-4 py-2 text-sm font-medium cursor-pointer transition-all"
           >
-            {syncing ? "Syncing..." : "Sync Activities"}
+            {syncing ? "Syncing..." : "Sync"}
           </button>
         </div>
       </div>
 
-      {/* Widget Customization Menu */}
-      {showWidgetMenu && (
-        <div className={styles.customizeMenu}>
-          <div className={styles.customizeHeader}>
-            <h2 className={styles.customizeTitle}>Dashboard Customization</h2>
-            <button onClick={resetLayout} className={styles.resetBtn}>
-              Reset to Default
-            </button>
-          </div>
-          <p className={styles.customizeHint}>
-            <strong>Drag widgets</strong> by their top bar to reorder. <strong>Drag the right edge</strong> to resize
-            width. Click <strong>✕</strong> to hide.
-          </p>
-
-          {getHiddenWidgets().length > 0 && (
-            <>
-              <h3 className={styles.hiddenTitle}>Hidden Widgets</h3>
-              <div className={styles.hiddenList}>
-                {getHiddenWidgets().map((widget) => (
-                  <button
-                    key={widget.id}
-                    onClick={() => toggleWidgetVisibility(widget.id)}
-                    className={styles.hiddenBtn}
-                  >
-                    + {WIDGET_REGISTRY[widget.id].name}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
       {/* Sync progress */}
       {syncing && syncStatus && (
-        <div className={styles.syncProgress}>
-          <div className={styles.syncSpinner} />
-          <span className={styles.syncStatusText}>{syncStatus}</span>
-          {syncCount > 0 && <span className={styles.syncCountText}>{syncCount} saved</span>}
+        <div className="bg-neutral-900/40 rounded-xl px-4 py-3 mb-4 flex items-center gap-2.5 border border-neutral-800">
+          <div className="w-3.5 h-3.5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-neutral-300 text-sm">{syncStatus}</span>
+          {syncCount > 0 && <span className="text-neutral-500 text-xs ml-auto">{syncCount} saved</span>}
         </div>
       )}
 
       {syncResult && (
         <p
-          className={styles.syncResult}
+          className="mb-4 text-sm px-3 py-3 rounded-lg bg-neutral-900/40"
           style={{
-            color:
-              syncResult.type === "error"
-                ? COLORS.error
-                : syncResult.type === "warning"
-                  ? COLORS.warning
-                  : COLORS.success,
-            border: `1px solid ${syncResult.type === "error" ? COLORS.error : syncResult.type === "warning" ? COLORS.warning : COLORS.success}30`,
+            color: syncResult.type === "error" ? COLORS.error : COLORS.textMuted,
+            border: `1px solid ${syncResult.type === "error" ? "rgba(248,113,113,0.2)" : "rgba(163,163,163,0.15)"}`,
           }}
         >
           {syncResult.message}
@@ -195,37 +138,58 @@ export default function Dashboard() {
       )}
 
       {activities.length === 0 && !syncing && (
-        <p className={styles.emptyState}>No activities yet. Syncing automatically...</p>
+        <p className="text-neutral-500 text-center mt-16 text-sm">No activities yet. Syncing automatically...</p>
       )}
 
       {activities.length > 0 && (
         <>
-          <div id="dashboard-grid" className={styles.grid}>
-            {getOrderedVisibleWidgets().map((widgetConfig) => {
-              const content = renderWidget(widgetConfig.id);
-              if (!content) return null;
-
-              return (
-                <WidgetContainer
-                  key={widgetConfig.id}
-                  config={widgetConfig}
-                  title={WIDGET_REGISTRY[widgetConfig.id].name}
-                  onReorder={reorderWidget}
-                  onResize={(colSpan) => resizeWidget(widgetConfig.id, colSpan)}
-                  onRemove={() => toggleWidgetVisibility(widgetConfig.id)}
-                >
-                  <WidgetErrorBoundary widgetName={WIDGET_REGISTRY[widgetConfig.id].name}>
-                    {content}
-                  </WidgetErrorBoundary>
-                </WidgetContainer>
-              );
-            })}
+          {/* Row 1: ThisWeek + RunMap */}
+          <div className="grid gap-4 mb-4" style={{ gridTemplateColumns: "5fr 7fr" }}>
+            {currentWeek && (
+              <ThisWeek
+                currentWeek={currentWeek}
+                currentPlanWeek={currentPlanWeek}
+                weekChange={weekChange}
+                sufferScoreChange={sufferScoreChange}
+                actions={nextActions}
+              />
+            )}
+            <RunMap selectedActivity={selectedActivity} />
           </div>
 
-          <p className={styles.footer}>
-            {activities.length} activities cached · {runs.length} runs · {gymSessions.length} gym sessions
+          {/* Row 2: WeekDetail (full width) */}
+          {effectiveWeekStart && (
+            <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 mb-4 hover:border-neutral-700 transition-all">
+              <WeekDetail
+                activities={activities}
+                selectedWeekStart={effectiveWeekStart}
+                selectedActivityId={selectedActivity?.strava_id ?? null}
+                onSelectActivity={setSelectedActivity}
+                onWeekChange={setSelectedWeekStart}
+                weeks={weeks}
+              />
+            </div>
+          )}
+
+          {/* Row 3: RecentRuns (full width) */}
+          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 mb-8 hover:border-neutral-700 transition-all">
+            <RecentRuns runs={runs} onBatteryUpdate={handleBatteryUpdate} />
+          </div>
+
+          <p className="text-neutral-600 text-xs text-center px-3 py-3 bg-neutral-900/30 rounded-lg">
+            {activities.length} activities cached &middot; {runs.length} runs
           </p>
         </>
+      )}
+      {showBatteryModal && newlySyncedIds.length > 0 && (
+        <BatteryModal
+          activities={activities.filter((a) => newlySyncedIds.includes(a.strava_id) && a.type === "Run")}
+          onClose={() => {
+            setShowBatteryModal(false);
+            clearSyncedIds();
+          }}
+          onSaved={handleBatteryUpdate}
+        />
       )}
     </main>
   );

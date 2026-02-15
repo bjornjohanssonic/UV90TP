@@ -1,28 +1,33 @@
-import type { WeekData, PlanWeek } from "@/types";
+import type { WeekData, PlanWeek, NextAction } from "@/types";
 import { COLORS, PHASE_COLORS, PHASE_LABELS, formatKm, formatTime, formatPace } from "@/lib/dashboard-helpers";
-import styles from "./this-week.module.css";
 
 interface ThisWeekProps {
   currentWeek: WeekData;
   currentPlanWeek: PlanWeek | null;
   weekChange: number;
+  sufferScoreChange: number;
+  actions: NextAction[];
 }
 
-export default function ThisWeek({ currentWeek, currentPlanWeek, weekChange }: ThisWeekProps) {
+const PRIORITY_COLORS = {
+  high: "#d4d4d4",
+  medium: "#a3a3a3",
+  low: "#525252",
+};
+
+export default function ThisWeek({ currentWeek, currentPlanWeek, weekChange, sufferScoreChange, actions }: ThisWeekProps) {
   return (
-    <div className={styles.container}>
-      {/* Header bar - DYNAMIC gradient color based on phase */}
+    <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl hover:border-neutral-700 transition-all overflow-hidden">
+      {/* Header bar - monochromatic phase indicator */}
       <div
-        className={styles.header}
+        className="px-5 py-3 flex items-center justify-between"
         style={{
-          background: currentPlanWeek
-            ? `linear-gradient(135deg, ${PHASE_COLORS[currentPlanWeek.phase]} 0%, ${PHASE_COLORS[currentPlanWeek.phase]}dd 100%)`
-            : `linear-gradient(135deg, ${COLORS.primaryGreen} 0%, ${COLORS.accentGreen} 100%)`,
+          backgroundColor: currentPlanWeek ? `${PHASE_COLORS[currentPlanWeek.phase]}15` : "rgba(163,163,163,0.06)",
         }}
       >
-        <h2 className={styles.headerTitle}>This Week</h2>
+        <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-neutral-500 m-0">This Week</h2>
         {currentPlanWeek && (
-          <span className={styles.headerBadge}>
+          <span className="text-[0.65rem] uppercase tracking-wider font-medium text-neutral-400 bg-neutral-800/60 px-2 py-0.5 rounded">
             {PHASE_LABELS[currentPlanWeek.phase]}
             {currentPlanWeek.cycle_number ? ` · Cycle ${currentPlanWeek.cycle_number}` : ""}
           </span>
@@ -30,13 +35,13 @@ export default function ThisWeek({ currentWeek, currentPlanWeek, weekChange }: T
       </div>
 
       {/* Content */}
-      <div className={styles.content}>
-        <div className={styles.contentHeader}>
-          <h2 className={styles.contentTitle}>
+      <div className="p-5 pt-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-light text-neutral-100 tracking-tight m-0">
             This Week
             {currentPlanWeek && (
               <span
-                className={styles.phaseBadge}
+                className="ml-2 text-xs font-medium px-2 py-0.5 rounded"
                 style={{
                   color: PHASE_COLORS[currentPlanWeek.phase],
                   backgroundColor: `${PHASE_COLORS[currentPlanWeek.phase]}15`,
@@ -48,73 +53,105 @@ export default function ThisWeek({ currentWeek, currentPlanWeek, weekChange }: T
             )}
           </h2>
           <span
-            className={styles.weekChangeBadge}
+            className="text-xs font-medium px-2 py-0.5 rounded"
             style={{
-              color: weekChange >= 0 ? COLORS.success : COLORS.error,
-              backgroundColor: weekChange >= 0 ? `${COLORS.success}15` : `${COLORS.error}15`,
+              color: weekChange >= 0 ? COLORS.textMuted : COLORS.error,
+              backgroundColor: weekChange >= 0 ? "rgba(163,163,163,0.1)" : "rgba(248,113,113,0.1)",
             }}
           >
             {weekChange >= 0 ? "\u2191" : "\u2193"} {Math.abs(weekChange).toFixed(0)}%
           </span>
         </div>
 
-        <div className={`${styles.statsGrid} ${currentPlanWeek ? styles.statsGridWithPlan : styles.statsGridDefault}`}>
+        <div className={`grid gap-2.5 ${currentPlanWeek ? "grid-cols-3" : "grid-cols-3"}`}>
           {currentPlanWeek && (
-            <div
-              className={styles.planStatCard}
-              style={{ border: `2px solid ${PHASE_COLORS[currentPlanWeek.phase]}40` }}
-            >
-              <div className={styles.statLabel}>Target</div>
-              <div className={styles.statValue} style={{ color: PHASE_COLORS[currentPlanWeek.phase] }}>
+            <div className="bg-neutral-800/30 rounded-lg p-3 border border-neutral-800">
+              <div className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">Target</div>
+              <div className="text-xl font-light text-neutral-100 tracking-tight">
                 {currentPlanWeek.target_volume_km} km
               </div>
             </div>
           )}
           {currentPlanWeek && currentPlanWeek.long_run_km > 0 && (
-            <div
-              className={styles.planStatCard}
-              style={{ border: `2px solid ${COLORS.warmGold}40` }}
-            >
-              <div className={styles.statLabel}>Long Run</div>
-              <div className={styles.statValue} style={{ color: COLORS.warmGold }}>
+            <div className="bg-neutral-800/30 rounded-lg p-3 border border-neutral-800">
+              <div className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">Long Run</div>
+              <div className="text-xl font-light text-neutral-100 tracking-tight">
                 {currentPlanWeek.long_run_km} km
                 {currentPlanWeek.back_to_back ? (
-                  <span className={styles.b2bLabel}>B2B</span>
+                  <span className="ml-1.5 text-[0.6rem] uppercase tracking-wider text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded">
+                    B2B
+                  </span>
                 ) : null}
               </div>
             </div>
           )}
           {[
-            { label: "Distance", value: `${formatKm(currentWeek.totalDistance)} km`, color: COLORS.primaryGreen },
-            { label: "Time", value: formatTime(currentWeek.totalTime), color: COLORS.accentGreen },
-            { label: "Runs", value: String(currentWeek.runs), color: COLORS.darkGold },
+            { label: "Distance", value: `${formatKm(currentWeek.totalDistance)} km` },
+            { label: "Time", value: formatTime(currentWeek.totalTime) },
+            { label: "Runs", value: String(currentWeek.runs) },
+            { label: "Avg Pace", value: `${formatPace(currentWeek.totalDistance, currentWeek.totalTime)} /km` },
+            { label: "Longest", value: `${formatKm(currentWeek.longestRun)} km` },
             {
-              label: "Avg Pace",
-              value: `${formatPace(currentWeek.totalDistance, currentWeek.totalTime)} /km`,
-              color: COLORS.textDark,
+              label: "Effort",
+              value: currentWeek.totalSufferScore > 0 ? String(Math.round(currentWeek.totalSufferScore)) : "\u2014",
+              badge: sufferScoreChange !== 0 && currentWeek.totalSufferScore > 0
+                ? { value: sufferScoreChange, label: `${sufferScoreChange >= 0 ? "\u2191" : "\u2193"} ${Math.abs(sufferScoreChange).toFixed(0)}%` }
+                : undefined,
             },
-            { label: "Longest", value: `${formatKm(currentWeek.longestRun)} km`, color: COLORS.warmGold },
           ].map((stat) => (
-            <div key={stat.label} className={styles.statCard}>
-              <div className={styles.statLabel}>{stat.label}</div>
-              <div className={styles.statValue} style={{ color: stat.color }}>{stat.value}</div>
+            <div key={stat.label} className="bg-neutral-800/30 rounded-lg p-3">
+              <div className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">
+                {stat.label}
+              </div>
+              <div className="text-xl font-light text-neutral-100 tracking-tight flex items-center gap-1.5">
+                {stat.value}
+                {"badge" in stat && stat.badge && (
+                  <span
+                    className="text-[0.6rem] font-medium px-1.5 py-0.5 rounded"
+                    style={{
+                      color: stat.badge.value >= 0 ? COLORS.textMuted : COLORS.error,
+                      backgroundColor: stat.badge.value >= 0 ? "rgba(163,163,163,0.1)" : "rgba(248,113,113,0.1)",
+                    }}
+                  >
+                    {stat.badge.label}
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Target progress bar - DYNAMIC width and color */}
+        {/* Target progress bar */}
         {currentPlanWeek && (
-          <div className={styles.progressBarTrack}>
+          <div className="mt-4 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
             <div
-              className={styles.progressBarFill}
+              className="h-full rounded-full transition-all"
               style={{
                 width: `${Math.min(100, (currentWeek.totalDistance / (currentPlanWeek.target_volume_km * 1000)) * 100)}%`,
                 backgroundColor:
-                  currentWeek.totalDistance >= currentPlanWeek.target_volume_km * 1000
-                    ? COLORS.success
-                    : PHASE_COLORS[currentPlanWeek.phase],
+                  currentWeek.totalDistance >= currentPlanWeek.target_volume_km * 1000 ? "#d4d4d4" : "#a3a3a3",
               }}
             />
+          </div>
+        )}
+
+        {/* Next Actions */}
+        {actions.length > 0 && (
+          <div className="mt-4 flex flex-col gap-1.5">
+            <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-medium mb-0.5">Next</div>
+            {actions.map((action, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2 text-xs rounded-lg px-3 py-2 bg-neutral-800/30"
+                style={{ borderLeft: `2px solid ${PRIORITY_COLORS[action.priority]}` }}
+              >
+                <span className="shrink-0">{action.icon}</span>
+                <div className="min-w-0">
+                  <div className="text-neutral-200">{action.action}</div>
+                  <div className="text-neutral-500 text-[0.65rem] mt-0.5">{action.reason}</div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

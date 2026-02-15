@@ -91,6 +91,21 @@ export function initTables(db: Database.Database): void {
   } catch {
     /* column already exists */
   }
+  try {
+    db.exec(`ALTER TABLE activities ADD COLUMN summary_polyline TEXT`);
+  } catch {
+    /* column already exists */
+  }
+  try {
+    db.exec(`ALTER TABLE activities ADD COLUMN battery_start INTEGER`);
+  } catch {
+    /* column already exists */
+  }
+  try {
+    db.exec(`ALTER TABLE activities ADD COLUMN battery_end INTEGER`);
+  } catch {
+    /* column already exists */
+  }
 }
 
 export default getDb;

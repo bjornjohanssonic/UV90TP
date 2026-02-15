@@ -12,7 +12,6 @@ import {
   PHASE_COLORS,
   PHASE_LABELS,
   aggregateWeeks,
-  computePRs,
   generateNextActions,
 } from "./dashboard-helpers";
 
@@ -33,6 +32,10 @@ function makeActivity(overrides: Partial<Activity> = {}): Activity {
     total_elevation_gain: 50,
     start_date: "2025-01-06T08:00:00Z",
     suffer_score: 50,
+    splits: null,
+    summary_polyline: null,
+    battery_start: null,
+    battery_end: null,
     ...overrides,
   };
 }
@@ -154,10 +157,10 @@ describe("COLORS", () => {
       "cardBg",
       "cardAlt",
       "cardAccent",
-      "primaryGreen",
-      "accentGreen",
-      "warmGold",
-      "darkGold",
+      "primaryNeutral",
+      "accentNeutral",
+      "warmNeutral",
+      "darkNeutral",
       "textDark",
       "textMuted",
       "textLight",
@@ -219,6 +222,7 @@ describe("aggregateWeeks", () => {
     expect(weeks[0].runs).toBe(1); // Jan 13 week
     expect(weeks[1].runs).toBe(2); // Jan 6 week
     expect(weeks[1].totalDistance).toBe(13000); // 5000 + 8000
+    expect(weeks[1].totalSufferScore).toBe(100); // 50 + 50 default
   });
 
   it("calculates avgPace correctly", () => {
@@ -233,57 +237,6 @@ describe("aggregateWeeks", () => {
     const long = makeActivity({ strava_id: "2", distance: 15000, start_date: "2025-01-07T08:00:00Z" });
     const weeks = aggregateWeeks([short, long]);
     expect(weeks[0].longestRun).toBe(15000);
-  });
-});
-
-// ─── computePRs ─────────────────────────────────────────────────────────────
-
-describe("computePRs", () => {
-  it("returns empty for no activities", () => {
-    expect(computePRs([])).toEqual([]);
-  });
-
-  it("returns empty for non-run activities", () => {
-    expect(computePRs([makeActivity({ type: "WeightTraining" })])).toEqual([]);
-  });
-
-  it("returns empty for runs with zero distance", () => {
-    expect(computePRs([makeActivity({ distance: 0 })])).toEqual([]);
-  });
-
-  it("computes longest run PR", () => {
-    const short = makeActivity({ strava_id: "1", distance: 5000, name: "Short" });
-    const long = makeActivity({ strava_id: "2", distance: 20000, name: "Long" });
-    const prs = computePRs([short, long]);
-    const longestPR = prs.find((p) => p.label === "Longest Run");
-    expect(longestPR).toBeDefined();
-    expect(longestPR!.value).toBe("20.0 km");
-    expect(longestPR!.activity).toBe("Long");
-  });
-
-  it("computes fastest pace PR (only for runs >= 1km)", () => {
-    const slow = makeActivity({ strava_id: "1", distance: 5000, moving_time: 2500, name: "Slow" });
-    const fast = makeActivity({ strava_id: "2", distance: 5000, moving_time: 1250, name: "Fast" });
-    const tooShort = makeActivity({ strava_id: "3", distance: 500, moving_time: 100, name: "TooShort" });
-    const prs = computePRs([slow, fast, tooShort]);
-    const pacePR = prs.find((p) => p.label === "Fastest Pace");
-    expect(pacePR).toBeDefined();
-    expect(pacePR!.activity).toBe("Fast");
-  });
-
-  it("includes max heart rate PR when available", () => {
-    const withHR = makeActivity({ max_heartrate: 195 });
-    const prs = computePRs([withHR]);
-    const hrPR = prs.find((p) => p.label === "Max Heart Rate");
-    expect(hrPR).toBeDefined();
-    expect(hrPR!.value).toBe("195 bpm");
-  });
-
-  it("skips max heart rate PR when no HR data", () => {
-    const noHR = makeActivity({ max_heartrate: null, average_heartrate: null });
-    const prs = computePRs([noHR]);
-    const hrPR = prs.find((p) => p.label === "Max Heart Rate");
-    expect(hrPR).toBeUndefined();
   });
 });
 

@@ -13,6 +13,9 @@ export interface Activity {
   start_date: string;
   suffer_score: number | null;
   splits: string | null;
+  summary_polyline: string | null;
+  battery_start: number | null;
+  battery_end: number | null;
 }
 
 export interface WeekData {
@@ -24,13 +27,7 @@ export interface WeekData {
   avgPace: number;
   longestRun: number;
   totalElevation: number;
-}
-
-export interface PersonalRecord {
-  label: string;
-  value: string;
-  activity: string;
-  date: string;
+  totalSufferScore: number;
 }
 
 export interface NextAction {

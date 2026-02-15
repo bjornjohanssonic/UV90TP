@@ -1,6 +1,6 @@
-import type { Activity, WeekData, PersonalRecord, NextAction, PlanWeek, Plan } from "@/types";
+import type { Activity, WeekData, NextAction, PlanWeek, Plan } from "@/types";
 
-export type { Activity, WeekData, PersonalRecord, NextAction, PlanWeek, Plan };
+export type { Activity, WeekData, NextAction, PlanWeek, Plan };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -52,6 +52,30 @@ export function weekLabel(mondayStr: string): string {
   return `${mon.toLocaleDateString("sv-SE", { month: "short", day: "numeric" })} – ${sun.toLocaleDateString("sv-SE", { month: "short", day: "numeric" })}`;
 }
 
+export function formatTimeOfDay(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+}
+
+export function formatStartEnd(startDate: string, elapsedTime: number): string {
+  const start = new Date(startDate);
+  const end = new Date(start.getTime() + elapsedTime * 1000);
+  const fmt = (d: Date) => d.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+  return `${fmt(start)}\u2013${fmt(end)}`;
+}
+
+export function formatBattery(start: number | null, end: number | null): string {
+  if (start == null && end == null) return "\u2014";
+  if (start != null && end != null) return `${start}% \u2192 ${end}%`;
+  if (start != null) return `${start}%`;
+  return `\u2192 ${end}%`;
+}
+
+export function batteryDrain(start: number | null, end: number | null): number | null {
+  if (start == null || end == null) return null;
+  return start - end;
+}
+
 export function getDayOfWeek(): number {
   const d = new Date().getDay();
   return d === 0 ? 7 : d;
@@ -60,28 +84,28 @@ export function getDayOfWeek(): number {
 // ─── Colors ─────────────────────────────────────────────────────────────────
 
 export const COLORS = {
-  bg: "#E8E4DB",
-  cardBg: "#F5F2EA",
-  cardAlt: "#EBE7DD",
-  cardAccent: "#FFFEF9",
-  primaryGreen: "#3D6B4A",
-  accentGreen: "#528A66",
-  warmGold: "#B8954E",
-  darkGold: "#9D7F42",
-  textDark: "#252525",
-  textMuted: "#5A5A5A",
-  textLight: "#7A7A7A",
-  border: "#D4CFC3",
-  success: "#3D6B4A",
-  warning: "#C89A4F",
-  error: "#A94442",
+  bg: "#0a0a0a",
+  cardBg: "rgba(163,163,163,0.08)",
+  cardAlt: "rgba(163,163,163,0.04)",
+  cardAccent: "#171717",
+  primaryNeutral: "#d4d4d4",
+  accentNeutral: "#a3a3a3",
+  warmNeutral: "#737373",
+  darkNeutral: "#525252",
+  textDark: "#ededed",
+  textMuted: "#a3a3a3",
+  textLight: "#737373",
+  border: "#262626",
+  success: "#a3a3a3",
+  warning: "#737373",
+  error: "#f87171",
 };
 
 export const PHASE_COLORS: Record<string, string> = {
-  build: COLORS.primaryGreen,
-  recovery: COLORS.warmGold,
-  taper: COLORS.accentGreen,
-  race: COLORS.darkGold,
+  build: "#d4d4d4",
+  recovery: "#737373",
+  taper: "#a3a3a3",
+  race: "#525252",
 };
 
 export const PHASE_LABELS: Record<string, string> = {
@@ -110,6 +134,7 @@ export function aggregateWeeks(activities: Activity[]): WeekData[] {
     const totalTime = acts.reduce((s, a) => s + a.moving_time, 0);
     const longestRun = Math.max(...acts.map((a) => a.distance));
     const totalElevation = acts.reduce((s, a) => s + a.total_elevation_gain, 0);
+    const totalSufferScore = acts.reduce((s, a) => s + (a.suffer_score ?? 0), 0);
     weeks.push({
       weekStart: mondayKey,
       weekLabel: weekLabel(mondayKey),
@@ -119,80 +144,12 @@ export function aggregateWeeks(activities: Activity[]): WeekData[] {
       avgPace: totalDistance > 0 ? totalTime / (totalDistance / 1000) : 0,
       longestRun,
       totalElevation,
+      totalSufferScore,
     });
   }
 
   weeks.sort((a, b) => b.weekStart.localeCompare(a.weekStart));
   return weeks;
-}
-
-// ─── Personal Records ───────────────────────────────────────────────────────
-
-export function computePRs(activities: Activity[]): PersonalRecord[] {
-  const runs = activities.filter((a) => a.type === "Run" && a.distance > 0);
-  if (runs.length === 0) return [];
-
-  const prs: PersonalRecord[] = [];
-
-  const longest = runs.reduce((best, r) => (r.distance > best.distance ? r : best), runs[0]);
-  prs.push({
-    label: "Longest Run",
-    value: `${formatKm(longest.distance)} km`,
-    activity: longest.name,
-    date: formatDate(longest.start_date),
-  });
-
-  const paceRuns = runs.filter((r) => r.distance >= 1000);
-  if (paceRuns.length > 0) {
-    const fastest = paceRuns.reduce((best, r) => {
-      const pace = r.moving_time / (r.distance / 1000);
-      const bestPace = best.moving_time / (best.distance / 1000);
-      return pace < bestPace ? r : best;
-    }, paceRuns[0]);
-    prs.push({
-      label: "Fastest Pace",
-      value: `${formatPace(fastest.distance, fastest.moving_time)} /km`,
-      activity: fastest.name,
-      date: formatDate(fastest.start_date),
-    });
-  }
-
-  const highestElev = runs.reduce(
-    (best, r) => (r.total_elevation_gain > best.total_elevation_gain ? r : best),
-    runs[0],
-  );
-  if (highestElev.total_elevation_gain > 0) {
-    prs.push({
-      label: "Most Elevation",
-      value: `${Math.round(highestElev.total_elevation_gain)} m`,
-      activity: highestElev.name,
-      date: formatDate(highestElev.start_date),
-    });
-  }
-
-  const longestTime = runs.reduce((best, r) => (r.moving_time > best.moving_time ? r : best), runs[0]);
-  prs.push({
-    label: "Longest Time",
-    value: formatTime(longestTime.moving_time),
-    activity: longestTime.name,
-    date: formatDate(longestTime.start_date),
-  });
-
-  const hrRuns = runs.filter((r) => r.max_heartrate);
-  if (hrRuns.length > 0) {
-    const maxHr = hrRuns.reduce(
-      (best, r) => ((r.max_heartrate || 0) > (best.max_heartrate || 0) ? r : best),
-      hrRuns[0],
-    );
-    prs.push({
-      label: "Max Heart Rate",
-      value: `${Math.round(maxHr.max_heartrate!)} bpm`,
-      activity: maxHr.name,
-      date: formatDate(maxHr.start_date),
-    });
-  }
-
-  return prs;
 }
 
 // ─── Next Actions ───────────────────────────────────────────────────────────

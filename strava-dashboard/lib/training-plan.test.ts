@@ -34,9 +34,10 @@ describe("total week count", () => {
 // --- Recovery week positions ------------------------------------------------
 
 describe("recovery week positions", () => {
-  it("weeks 4, 8, 12, 16, 20 have phase recovery", () => {
+  it("recovery weeks follow every-4th-week pattern from firstRecoveryWeek", () => {
     const plan = generatePlan(makeConfig({ totalWeeks: 28 }));
-    const recoveryPositions = [4, 8, 12, 16, 20];
+    // Default firstRecoveryWeek=4, so recovery at {4, 8, 12, 16, 20, 24}
+    const recoveryPositions = [4, 8, 12, 16, 20, 24];
 
     for (const weekNum of recoveryPositions) {
       const week = plan.weeks.find((w) => w.weekNumber === weekNum);
@@ -47,9 +48,23 @@ describe("recovery week positions", () => {
 
   it("non-recovery build weeks are not marked as recovery", () => {
     const plan = generatePlan(makeConfig({ totalWeeks: 28 }));
-    const buildWeeks = plan.weeks.filter((w) => w.weekNumber <= 24 && ![4, 8, 12, 16, 20].includes(w.weekNumber));
+    const recoveryPositions = new Set([4, 8, 12, 16, 20, 24]);
+    const buildWeeks = plan.weeks.filter(
+      (w) => w.weekNumber <= 24 && !recoveryPositions.has(w.weekNumber),
+    );
     for (const week of buildWeeks) {
       expect(week.phase, "week " + week.weekNumber + " should be build").toBe("build");
+    }
+  });
+
+  it("respects custom firstRecoveryWeek", () => {
+    const plan = generatePlan(makeConfig({ totalWeeks: 28, firstRecoveryWeek: 3 }));
+    // Recovery at {3, 7, 11, 15, 19, 23}
+    const recoveryPositions = [3, 7, 11, 15, 19, 23];
+    for (const weekNum of recoveryPositions) {
+      const week = plan.weeks.find((w) => w.weekNumber === weekNum);
+      expect(week, "week " + weekNum + " should exist").toBeDefined();
+      expect(week!.phase, "week " + weekNum + " should be recovery").toBe("recovery");
     }
   });
 });

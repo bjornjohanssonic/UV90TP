@@ -106,6 +106,43 @@ export function initTables(db: Database.Database): void {
   } catch {
     /* column already exists */
   }
+
+  // ─── v2 "Ground Control" tables ──────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tips (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category TEXT NOT NULL,
+      trigger TEXT NOT NULL,
+      severity TEXT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      source TEXT,
+      min_weekly_km REAL DEFAULT 0,
+      max_weekly_km REAL DEFAULT 999,
+      active INTEGER NOT NULL DEFAULT 1
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tip_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tip_id INTEGER NOT NULL REFERENCES tips(id),
+      shown_date TEXT NOT NULL,
+      context TEXT,
+      dismissed INTEGER NOT NULL DEFAULT 0,
+      UNIQUE(tip_id, shown_date)
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS daily_readiness (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL UNIQUE,
+      score INTEGER NOT NULL,
+      factors TEXT NOT NULL,
+      computed_at TEXT NOT NULL
+    )
+  `);
 }
 
 export default getDb;

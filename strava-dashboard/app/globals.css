@@ -2,7 +2,7 @@
 @source "../app/**/*.{ts,tsx}";
 @source "../lib/**/*.{ts,tsx}";
 
-/* ─── Memoria Design System Custom Properties ─── */
+/* ─── Ground Control Design Tokens ─── */
 :root {
   --color-bg: #0a0a0a;
   --color-card-bg: rgba(163, 163, 163, 0.08);
@@ -16,6 +16,20 @@
   --color-border-hover: #525252;
   --color-surface: #171717;
   --color-error: #f87171;
+
+  /* Health signal colors */
+  --color-zone-green: #4ade80;
+  --color-zone-green-muted: rgba(74, 222, 128, 0.15);
+  --color-zone-yellow: #fbbf24;
+  --color-zone-yellow-muted: rgba(251, 191, 36, 0.15);
+  --color-zone-red: #f87171;
+  --color-zone-red-muted: rgba(248, 113, 113, 0.15);
+
+  /* Readiness glow */
+  --glow-fresh: 0 0 80px rgba(74, 222, 128, 0.1);
+  --glow-ready: 0 0 60px rgba(163, 163, 163, 0.08);
+  --glow-moderate: 0 0 60px rgba(251, 191, 36, 0.08);
+  --glow-fatigued: 0 0 60px rgba(248, 113, 113, 0.06);
 }
 
 /* ─── Base Reset ─── */
@@ -31,6 +45,60 @@ body {
   max-height: none !important;
 }
 
+/* ─── Tooltips ─── */
+[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #a3a3a3;
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  max-width: 280px;
+  width: max-content;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 50;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
+/* Arrow */
+[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 50;
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+}
 
 /* ─── Keyframes ─── */
 @keyframes spin {
@@ -60,4 +128,61 @@ body {
 
 @utility animate-fade-out {
   animation: fade-out 0.6s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-count-up {
+  animation: count-up 0.6s ease-out forwards;
+}
+
+@keyframes grow-bar {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@utility animate-grow-bar {
+  animation: grow-bar 0.5s ease-out forwards;
+  transform-origin: bottom;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@utility animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
 }

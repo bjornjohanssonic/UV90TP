@@ -34,6 +34,9 @@ export interface PlanConfig {
   startingLongRunKm?: number;
   peakVolumeKm?: number;
   totalWeeks?: number;
+  firstRecoveryWeek?: number; // default 4, set to 2-3 if already training
+  maxLongRunKm?: number; // hard cap on single long run, default 35
+  startDate?: string; // plan start date (YYYY-MM-DD), defaults to this Monday
 }
 
 export interface GeneratedWeek {

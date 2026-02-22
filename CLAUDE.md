@@ -17,8 +17,12 @@ A personal running dashboard that extends Strava's built-in stats with training 
 - **Database:** SQLite via better-sqlite3 (WAL mode, local, no server needed)
 - **API:** Strava API v3 with OAuth 2.0
 - **HTTP Client:** Axios
-- **Styling:** Inline CSS (dark theme, no external CSS library)
+- **Styling:** CSS Modules (`.module.css`) + `globals.css` with CSS custom properties (light warm theme, WCAG AA compliant)
+- **Auth/Session:** iron-session (secure cookie-based sessions)
+- **Testing:** Vitest
+- **Formatting:** Prettier (120 width, semicolons, trailing commas)
 - **Hosting:** Local only (localhost:3000)
+- **Locale:** `sv-SE` for all date formatting
 
 ## Project Structure
 
@@ -124,21 +128,42 @@ NEXTAUTH_SECRET=
 ## Pages
 
 ### Home (`/`)
-- Checks localStorage for existing athlete ID → redirects to dashboard if found
+- Checks localStorage for existing athlete ID → redirects to dashboard if found with loading indicator
 - "Connect with Strava" button → initiates OAuth flow
 
 ### Dashboard (`/dashboard`)
+- **Auto-sync on login** — automatically fetches latest Strava activities when dashboard loads
 - **Activity sync** with SSE streaming progress
-- **This week summary** — distance, time, pace, runs, % change vs 4-week avg, plan target progress
+- **Customizable widget layout** — drag, resize, hide, and rearrange all dashboard widgets:
+  - **Drag to reorder**: Hover over widget to reveal drag handle (top bar), drag to reorder
+  - **Resize widgets**: Click bottom-left corner to cycle through sizes (small/medium/large/full)
+  - **Hide/show widgets**: Remove button (✕) in drag handle, restore via Customize menu
+  - **Visual drop indicators**: Dashed border shows where widget will land
+  - **Side-by-side layout**: Smaller widgets (small/medium/large) can sit next to each other
+  - **Persistent configuration**: Layout saved to localStorage
+  - **Recent Runs locked**: Table widget locked to full width for readability
+- **This week summary** (creative gradient card) — distance, time, pace, runs, plan target progress with color-coded phase badges
+- **Race countdown** — days until race with gradient banner
+- **Next Actions** (smart checklist card) — contextual, actionable suggestions based on **training plan progress** with priority indicators (high/medium/low):
+  - Pulls target from current plan week (not generic activity data)
+  - Smart long run scheduling: less aggressive on Saturdays (recognizes Sunday is available), more urgent on Sundays
+  - Suggests specific actions: "Do your 15km long run before week ends" rather than generic advice
+  - Rest day recommendations based on consecutive run days
+  - Phase-specific guidance (recovery, taper, race week)
+  - Volume management with daily km targets
+  - Flexible week matching: if plan hasn't started yet, uses week 1; if plan ended, uses last week
 - **Weekly distance chart** — last 8 weeks as bar chart with plan targets overlay
-- **Suggestions** — plan-aware coaching (rest days, long run planning, weekly km targets, phase guidance)
-- **Personal records** — top 5: longest run, fastest pace, most elevation, longest time, max HR
 - **Gym sessions** — this week's weight training count and duration
-- **Weekly breakdown** — last 4 weeks detail table (expandable to all)
-- **Recent runs** — last 20 runs with date, distance, time, pace, HR
+- **Personal records** — top 4: longest run, fastest pace, most elevation, longest time
+- **Weekly breakdown** — last 4 weeks detail table (expandable to all) with trend indicators
+- **Recent runs** — last 20 runs with date, distance, time, pace, HR in striped table
 
 ### Training Plan (`/training-plan`)
-- **No plan state:** form to create (race name, date, distance, current weekly volume)
+- **No plan state:** form to create with fields:
+  - Race name (optional), date, distance
+  - Total plan weeks (default 28)
+  - Current weekly volume and long run capability
+  - Target peak volume
 - **Plan active state:**
   - Race countdown + race name
   - Current week card (target, actual, remaining, long run, back-to-back)
@@ -152,23 +177,61 @@ NEXTAUTH_SECRET=
 
 Periodized plan generation in `lib/training-plan.ts`:
 
-- **Peak volume** scales by race distance (72% for 90km ultra, up to 85% for <50km, capped at 80km)
-- **Build progression** — volume-dependent weekly increase (4–10%, max +5km/week)
-- **Recovery cycles** — 3:1 below 60km/week, 2:1 at 60km+; recovery weeks at 65% of previous volume
-- **Long runs** — 25% of volume on recovery weeks, 28–35% on build weeks, capped at 55% of race distance
-- **Back-to-back weekends** — introduced at 50km+ volume, starting 12 weeks pre-race, every 3rd build week
-- **Taper** — 3 weeks at 70%, 55%, 35% of peak volume
-- **Race week** — 25% of peak volume, no long run
+### 28-Week Plan Structure
+- **Total duration:** 28 weeks configurable (24 build/plateau + 4 taper)
+- **Start date:** Plans start from **current week's Monday** (not next week), so activities from the current week count immediately
+- **Recovery weeks:** Fixed at weeks 4, 8, 12, 16, 20 (every 4 weeks)
+- **Plateau phase:** Weeks 20-24 hold peak volume for race-readiness
+- **Taper:** 4 weeks (weeks 25-28) at 70%, 55%, 35%, 20% of peak volume
+
+### Volume Progression
+- **Starting volume:** User-defined (e.g., 26 km/week)
+- **Peak volume:** User-defined or auto-calculated (70-75 km for ultra)
+- **Build weeks:** Progressive increase, max 15% per week, capped at +5 km/week
+- **Recovery weeks:** 65% of previous build week volume
+- **Plateau:** Holds peak volume during weeks 20-24
+
+### Long Run Progression
+- **Weeks 1-8:** 15 km → 25 km (~1.4 km/week increase)
+- **Weeks 9-16:** 25 km → 35 km (~1.25 km/week increase)
+- **Weeks 17-24:** Hold at 35-40 km (plateau phase)
+- **Recovery weeks:** Long run at 50% of previous week
+- **Taper:** Progressive reduction (18 km → 13 km → 7 km → 0)
+
+### Back-to-Back Weekends
+- **Timing:** 2-3 B2B weekends during plateau phase (weeks 20, 23)
+- **Format:** Saturday long run + Sunday at ~60% of long run distance
+- **Purpose:** Build race-day endurance without excessive single-run volume
 
 ## Design Preferences
 
-- Dark theme (#0a0a0a background, #141414 cards, #ededed text)
-- Strava orange (#fc4c02) for primary actions
-- Phase colors: build (cyan #4ecdc4), recovery (purple #a78bfa), taper (gold #f0ad4e), race (orange)
-- Metric units (km, min/km)
-- Weeks start on Monday
-- Encouraging tone in suggestions
-- Focus on running activities (gym sessions tracked separately)
+### Color Scheme (WCAG AA Compliant)
+- **Light warm theme** with green and tan/yellow tones:
+  - Background: Warm off-white (#FAF8F3)
+  - Cards: Light tan (#F5F1E8, #EFEBD9)
+  - Primary green: Forest green (#4A7C59) for actions and current week
+  - Accent green: Sage green (#5C8A6F) for success states
+  - Warm gold: Golden tan (#C9A961) for highlights and records
+  - Dark gold: Tan accent (#B8956A) for secondary elements
+  - Text: Dark brown (#2C2C2C) primary, gray-brown (#6B6B6B) muted
+  - Error: Muted red (#B85C5C)
+  - Warning: Warm orange (#D4A574)
+
+### Phase Colors
+- **Build:** Forest green (#4A7C59)
+- **Recovery:** Warm gold (#C9A961)
+- **Taper:** Sage green (#5C8A6F)
+- **Race:** Dark gold (#B8956A)
+
+### UI Design
+- **Creative cards:** Not generic card-deck style
+  - Gradient backgrounds for key cards (This Week)
+  - Checklist-style Next Actions with priority badges
+  - Subtle shadows and borders for depth
+- **Metric units:** km, min/km
+- **Weeks start:** Monday
+- **Tone:** Actionable and direct (not just encouraging)
+- **Focus:** Running activities (gym sessions tracked separately)
 
 ## Future Ideas
 

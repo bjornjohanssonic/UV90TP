@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { Activity } from "@/types";
+import type { RunQualityScore } from "@/types/coach";
 import { formatKm, formatTime, formatPace, formatDate, formatStartEnd } from "@/lib/dashboard-helpers";
 
 interface RunMapProps {
@@ -57,6 +58,25 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showGallery, setShowGallery] = useState(false);
   const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [qualityScore, setQualityScore] = useState<RunQualityScore | null>(null);
+
+  // Fetch quality score for selected activity
+  useEffect(() => {
+    if (!selectedActivity?.strava_id) {
+      setQualityScore(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/scoring/${selectedActivity.strava_id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setQualityScore(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedActivity?.strava_id]);
 
   // Load Leaflet dynamically
   useEffect(() => {
@@ -418,6 +438,43 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
                 <div className="text-sm text-neutral-200">{stat.value}</div>
               </div>
             ))}
+            {/* Quality score */}
+            <div>
+              <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-medium mb-0.5">
+                Quality
+              </div>
+              {qualityScore ? (
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-sm font-medium ${
+                      qualityScore.total >= 80
+                        ? "text-green-400"
+                        : qualityScore.total >= 60
+                          ? "text-neutral-200"
+                          : qualityScore.total >= 40
+                            ? "text-yellow-400"
+                            : "text-red-400"
+                    }`}
+                  >
+                    {qualityScore.total}
+                  </span>
+                  <div className="flex gap-1">
+                    {[
+                      { label: "P", value: qualityScore.paceConsistency },
+                      { label: "H", value: qualityScore.heartRateEfficiency },
+                      { label: "E", value: qualityScore.elevationHandling },
+                      { label: "A", value: qualityScore.planAlignment },
+                    ].map((s) => (
+                      <span key={s.label} className="text-[0.55rem] text-neutral-600" title={`${s.label}: ${s.value}/25`}>
+                        {s.value}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-neutral-600">-</div>
+              )}
+            </div>
           </div>
         </div>
       )}

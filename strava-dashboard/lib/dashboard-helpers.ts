@@ -212,7 +212,9 @@ export function generateNextActions(
     return actions;
   }
 
+  const minTarget = planWeek.target_volume_km * 0.9;
   const remaining = planWeek.target_volume_km - planWeek.actualVolumeKm;
+  const minRemaining = Math.max(0, minTarget - planWeek.actualVolumeKm);
   const longestThisWeek = currentWeek ? currentWeek.longestRun / 1000 : 0;
   const longRunNeeded = planWeek.long_run_km > 0 && longestThisWeek < planWeek.long_run_km * 0.9;
   const isSaturday = dayOfWeek === 6;
@@ -266,7 +268,7 @@ export function generateNextActions(
         actions.push({
           icon: "🏃",
           action: planWeek.back_to_back
-            ? `Do ${planWeek.long_run_km}km long run this weekend + ${Math.round(planWeek.long_run_km * 0.6)}km tomorrow`
+            ? `Do ${planWeek.long_run_km}km long run this weekend + ${Math.round(planWeek.long_run_km * 0.65)}km tomorrow`
             : `Do your ${planWeek.long_run_km}km long run this weekend`,
           reason: `${remaining.toFixed(1)}km left—Saturday or Sunday both work`,
           priority: "high",
@@ -275,7 +277,7 @@ export function generateNextActions(
         actions.push({
           icon: "🏃",
           action: planWeek.back_to_back
-            ? `Complete ${Math.round(planWeek.long_run_km * 0.6)}km second long run TODAY`
+            ? `Complete ${Math.round(planWeek.long_run_km * 0.65)}km second long run TODAY`
             : `Do your ${planWeek.long_run_km}km long run TODAY`,
           reason: `${remaining.toFixed(1)}km left—last day to get it done`,
           priority: "high",
@@ -299,7 +301,7 @@ export function generateNextActions(
       actions.push({
         icon: "🏃",
         action: planWeek.back_to_back
-          ? `Consider long run TODAY: ${planWeek.long_run_km}km, then ${Math.round(planWeek.long_run_km * 0.6)}km tomorrow`
+          ? `Consider long run TODAY: ${planWeek.long_run_km}km, then ${Math.round(planWeek.long_run_km * 0.65)}km tomorrow`
           : `Consider ${planWeek.long_run_km}km long run TODAY or tomorrow`,
         reason: `${remaining.toFixed(1)}km left—weekend is here`,
         priority: "high",
@@ -308,7 +310,7 @@ export function generateNextActions(
       actions.push({
         icon: "🏃",
         action: planWeek.back_to_back
-          ? `Complete ${Math.round(planWeek.long_run_km * 0.6)}km second long run TODAY`
+          ? `Complete ${Math.round(planWeek.long_run_km * 0.65)}km second long run TODAY`
           : `Do ${planWeek.long_run_km}km long run TODAY (last chance!)`,
         reason: `${remaining.toFixed(1)}km remaining—complete your long run today`,
         priority: "high",
@@ -323,44 +325,44 @@ export function generateNextActions(
     }
   }
 
-  if (remaining > 0 && daysLeft > 0 && actions.length === 0) {
-    const perDay = remaining / daysLeft;
+  if (minRemaining > 0 && daysLeft > 0 && actions.length === 0) {
+    const perDay = minRemaining / daysLeft;
 
     if (planWeek.phase === "recovery") {
       actions.push({
         icon: "🧘",
         action: `Easy ${perDay.toFixed(1)}km runs at recovery pace (slower than ${paceStr}/km)`,
-        reason: `Recovery week: ${remaining.toFixed(1)}km left, low intensity`,
+        reason: `Recovery week: at least ${minRemaining.toFixed(1)}km left, low intensity`,
         priority: "medium",
       });
     } else if (perDay > 12) {
       actions.push({
         icon: "⚠️",
-        action: `Run ${perDay.toFixed(1)}km per day for ${daysLeft} days`,
+        action: `Run at least ${perDay.toFixed(1)}km per day for ${daysLeft} days`,
         reason: "High daily volume needed—consider adding an extra run day",
         priority: "high",
       });
     } else if (perDay > 0) {
       actions.push({
         icon: "✓",
-        action: `${perDay.toFixed(1)}km per day for ${daysLeft} remaining days`,
-        reason: `${remaining.toFixed(1)}km left—manageable daily pace at ~${paceStr}/km`,
+        action: `At least ${perDay.toFixed(1)}km per day for ${daysLeft} remaining days`,
+        reason: `Get at least ${Math.ceil(minTarget)}km in this week (target ${planWeek.target_volume_km}km)`,
         priority: "medium",
       });
     }
-  } else if (remaining <= 0) {
+  } else if (minRemaining <= 0) {
     if (consecutiveDays >= 2) {
       actions.push({
         icon: "🎉",
         action: "Rest day or easy recovery run only",
-        reason: "Weekly target met—prioritize recovery",
+        reason: "Weekly minimum met—prioritize recovery",
         priority: "low",
       });
     } else {
       actions.push({
         icon: "✅",
-        action: "Week complete! Extra miles should be easy effort",
-        reason: `${planWeek.target_volume_km}km target reached`,
+        action: remaining <= 0 ? "Week complete! Extra miles should be easy effort" : "Minimum met—any extra km is bonus",
+        reason: `At least ${Math.ceil(minTarget)}km target reached`,
         priority: "low",
       });
     }

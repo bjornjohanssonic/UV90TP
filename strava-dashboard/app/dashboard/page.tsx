@@ -8,7 +8,16 @@ import WeekDetail from "./widgets/week-detail";
 import RecentRuns from "./widgets/recent-runs";
 import RunMap from "./widgets/run-map";
 import BatteryModal from "./widgets/battery-modal";
+import { ReadinessHero } from "./widgets/readiness-hero";
+import { DailyBriefingCard } from "./widgets/daily-briefing";
+import { ACWRGauge } from "./widgets/acwr-gauge";
+import { WeatherPanel } from "./widgets/weather";
+import { TipPanel } from "./widgets/tip-panel";
+import { PlanAdherenceCard } from "./widgets/plan-adherence";
+import { StreakTracker } from "./widgets/streak-tracker";
 import { useActivities, useTrainingPlan, useSyncStream, useDashboardData } from "./hooks";
+import { useCoach } from "./hooks/use-coach";
+import { useTips } from "./hooks/use-tips";
 
 export default function Dashboard() {
   const { activities, loadActivities } = useActivities();
@@ -18,7 +27,8 @@ export default function Dashboard() {
     await Promise.all([loadActivities(), loadPlan()]);
   }, [loadActivities, loadPlan]);
 
-  const { syncing, syncStatus, syncResult, syncCount, newlySyncedIds, clearSyncedIds, handleSync } = useSyncStream(loadData);
+  const { syncing, syncStatus, syncResult, syncCount, newlySyncedIds, clearSyncedIds, handleSync } =
+    useSyncStream(loadData);
   const {
     weeks,
     currentWeek,
@@ -28,7 +38,13 @@ export default function Dashboard() {
     currentPlanWeek,
     nextActions,
     daysToRace,
+    streaks,
+    adherence,
   } = useDashboardData(activities, plan, planWeeks);
+
+  // v2: Coach intelligence
+  const { data: coachData, reload: reloadCoach } = useCoach();
+  const { tips } = useTips();
 
   const [selectedWeekStart, setSelectedWeekStart] = useState<string | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -43,7 +59,6 @@ export default function Dashboard() {
 
   const handleBatteryUpdate = useCallback(
     (stravaId: string, start: number | null, end: number | null) => {
-      // Update local activities state so UI reflects the change immediately
       loadActivities();
     },
     [loadActivities],
@@ -63,15 +78,20 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, activities.length]);
 
+  // Reload coach data when activities change
+  useEffect(() => {
+    if (activities.length > 0 && loaded) {
+      reloadCoach();
+    }
+  }, [activities.length, loaded, reloadCoach]);
+
   // Keep selected activity in sync with reloaded data
   useEffect(() => {
     if (activities.length === 0) return;
     if (selectedActivity) {
-      // Refresh selected activity from reloaded data (e.g. after sync adds polyline)
       const updated = activities.find((a) => a.strava_id === selectedActivity.strava_id);
       if (updated && updated !== selectedActivity) setSelectedActivity(updated);
     } else {
-      // Default: most recent run
       const mostRecentRun = activities.find((a) => a.type === "Run");
       if (mostRecentRun) setSelectedActivity(mostRecentRun);
     }
@@ -85,16 +105,17 @@ export default function Dashboard() {
 
   const effectiveWeekStart = selectedWeekStart || (weeks.length > 0 ? weeks[0].weekStart : null);
 
-  // ─── JSX ──────────────────────────────────────────────────────────────
-
   return (
     <main className="max-w-[1400px] mx-auto p-8 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-2.5">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-light text-neutral-100 tracking-tight m-0">Dashboard</h1>
+          <h1 className="text-3xl font-light text-neutral-100 tracking-tight m-0">Ground Control</h1>
           {plan && daysToRace > 0 && (
-            <span className="text-sm font-medium text-neutral-400 bg-neutral-800/60 px-3 py-1 rounded-lg border border-neutral-700">
+            <span
+              className="text-sm font-medium text-neutral-400 bg-neutral-800/60 px-3 py-1 rounded-lg border border-neutral-700"
+              data-tooltip={`${daysToRace} days until ${plan.race_name || "race"} (${plan.race_distance_km} km) on ${plan.race_date}`}
+            >
               {plan.race_name || `${plan.race_distance_km} km`} &middot; {daysToRace} days
             </span>
           )}
@@ -142,9 +163,19 @@ export default function Dashboard() {
       )}
 
       {activities.length > 0 && (
-        <>
-          {/* Row 1: ThisWeek + RunMap */}
-          <div className="grid gap-4 mb-4" style={{ gridTemplateColumns: "5fr 7fr" }}>
+        <div className="flex flex-col gap-4">
+          {/* Readiness Hero */}
+          <ReadinessHero readiness={coachData?.readiness ?? null} />
+
+          {/* Daily Briefing */}
+          <DailyBriefingCard briefing={coachData?.briefing ?? null} />
+
+          {/* Weather */}
+          <WeatherPanel />
+
+          {/* ACWR + This Week */}
+          <div className="grid gap-4" style={{ gridTemplateColumns: "2fr 3fr" }}>
+            <ACWRGauge acwr={coachData?.acwr ?? null} />
             {currentWeek && (
               <ThisWeek
                 currentWeek={currentWeek}
@@ -154,12 +185,17 @@ export default function Dashboard() {
                 actions={nextActions}
               />
             )}
-            <RunMap selectedActivity={selectedActivity} />
           </div>
 
-          {/* Row 2: WeekDetail (full width) */}
+          {/* Tips */}
+          <TipPanel tips={tips} />
+
+          {/* Run Map */}
+          <RunMap selectedActivity={selectedActivity} />
+
+          {/* Week Detail */}
           {effectiveWeekStart && (
-            <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 mb-4 hover:border-neutral-700 transition-all">
+            <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-all">
               <WeekDetail
                 activities={activities}
                 selectedWeekStart={effectiveWeekStart}
@@ -171,16 +207,25 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Row 3: RecentRuns (full width) */}
-          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 mb-8 hover:border-neutral-700 transition-all">
+          {/* Plan Adherence + Streak Tracker */}
+          {(adherence || streaks) && (
+            <div className="grid gap-4 grid-cols-2">
+              <PlanAdherenceCard adherence={adherence} />
+              <StreakTracker streaks={streaks} />
+            </div>
+          )}
+
+          {/* Recent Runs */}
+          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-all">
             <RecentRuns runs={runs} onBatteryUpdate={handleBatteryUpdate} />
           </div>
 
           <p className="text-neutral-600 text-xs text-center px-3 py-3 bg-neutral-900/30 rounded-lg">
             {activities.length} activities cached &middot; {runs.length} runs
           </p>
-        </>
+        </div>
       )}
+
       {showBatteryModal && newlySyncedIds.length > 0 && (
         <BatteryModal
           activities={activities.filter((a) => newlySyncedIds.includes(a.strava_id) && a.type === "Run")}

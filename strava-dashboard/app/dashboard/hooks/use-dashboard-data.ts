@@ -1,6 +1,91 @@
 import { useMemo } from "react";
-import type { Activity, Plan, PlanWeek } from "@/types";
-import { aggregateWeeks, generateNextActions } from "@/lib/dashboard-helpers";
+import type { Activity, Plan, PlanWeek, WeekData, StreakData, PlanAdherence } from "@/types";
+import { aggregateWeeks, generateNextActions, getMonday, toLocalDateStr } from "@/lib/dashboard-helpers";
+
+function computeStreaks(weeks: WeekData[]): StreakData {
+  // A "streak week" = week with 3+ runs
+  // Sorted newest first in `weeks`
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let tempStreak = 0;
+
+  // Check from newest to oldest for current streak
+  for (const w of weeks) {
+    if (w.runs >= 3) {
+      currentStreak++;
+    } else {
+      break;
+    }
+  }
+
+  // Find longest streak across all weeks
+  for (const w of weeks) {
+    if (w.runs >= 3) {
+      tempStreak++;
+      longestStreak = Math.max(longestStreak, tempStreak);
+    } else {
+      tempStreak = 0;
+    }
+  }
+
+  // Consistency: % of last 8 weeks with 3+ runs
+  const last8 = weeks.slice(0, 8);
+  const consistency = last8.length > 0 ? Math.round((last8.filter((w) => w.runs >= 3).length / last8.length) * 100) : 0;
+
+  return { currentStreak, longestStreak, consistency };
+}
+
+function computePlanAdherence(planWeeks: PlanWeek[]): PlanAdherence | null {
+  const completedWeeks = planWeeks.filter((w) => w.actualVolumeKm > 0);
+  if (completedWeeks.length === 0) return null;
+
+  // Overall adherence: % of weeks where actual >= 90% of target (flexible threshold)
+  const weeksMetTarget = completedWeeks.filter((w) => w.actualVolumeKm >= w.target_volume_km * 0.9).length;
+  const overallPercent = Math.round((weeksMetTarget / completedWeeks.length) * 100);
+
+  // Long run hit rate: weeks where longest run >= 90% of long_run_km target
+  const weeksWithLongRun = completedWeeks.filter((w) => w.long_run_km > 0);
+  let longRunHitRate = "N/A";
+  if (weeksWithLongRun.length > 0) {
+    // We can't directly know the longest run per week from PlanWeek alone,
+    // but we can approximate: if actual volume >= target * 0.8, long run likely happened
+    const hits = weeksWithLongRun.filter((w) => w.actualVolumeKm >= w.target_volume_km * 0.8).length;
+    longRunHitRate = `${hits}/${weeksWithLongRun.length} weeks`;
+  }
+
+  // Recovery compliance: avg volume reduction in recovery weeks
+  const recoveryWeeks = completedWeeks.filter((w) => w.phase === "recovery");
+  let recoveryCompliance = "N/A";
+  if (recoveryWeeks.length > 0) {
+    const avgReduction = recoveryWeeks.reduce((s, w) => {
+      const pct = w.target_volume_km > 0 ? (w.actualVolumeKm / w.target_volume_km) * 100 : 100;
+      return s + pct;
+    }, 0) / recoveryWeeks.length;
+    recoveryCompliance = `${Math.round(avgReduction)}% of target`;
+  }
+
+  // Build progression: avg week-over-week increase during build weeks
+  const buildWeeks = completedWeeks.filter((w) => w.phase === "build" && w.actualVolumeKm > 0);
+  let buildProgression = "N/A";
+  if (buildWeeks.length >= 2) {
+    let totalIncrease = 0;
+    let increases = 0;
+    for (let i = 1; i < buildWeeks.length; i++) {
+      if (buildWeeks[i - 1].actualVolumeKm > 0) {
+        const pctChange =
+          ((buildWeeks[i].actualVolumeKm - buildWeeks[i - 1].actualVolumeKm) / buildWeeks[i - 1].actualVolumeKm) *
+          100;
+        totalIncrease += pctChange;
+        increases++;
+      }
+    }
+    if (increases > 0) {
+      buildProgression = `${totalIncrease > 0 ? "+" : ""}${Math.round(totalIncrease / increases)}%/week`;
+    }
+  }
+
+  return { overallPercent, longRunHitRate, recoveryCompliance, buildProgression };
+}
 
 export function useDashboardData(activities: Activity[], plan: Plan | null, planWeeks: PlanWeek[]) {
   return useMemo(() => {
@@ -42,6 +127,15 @@ export function useDashboardData(activities: Activity[], plan: Plan | null, plan
       ? Math.ceil((new Date(plan.race_date + "T00:00:00").getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
 
+    // v2: Streaks
+    const streaks = computeStreaks(weeks);
+
+    // v2: Plan adherence
+    const adherence = planWeeks.length > 0 ? computePlanAdherence(planWeeks) : null;
+
+    // v2: Current week start (Monday)
+    const currentWeekStart = toLocalDateStr(getMonday(today));
+
     return {
       weeks,
       currentWeek,
@@ -51,6 +145,9 @@ export function useDashboardData(activities: Activity[], plan: Plan | null, plan
       currentPlanWeek,
       nextActions,
       daysToRace,
+      streaks,
+      adherence,
+      currentWeekStart,
     };
   }, [activities, plan, planWeeks]);
 }

@@ -35,23 +35,8 @@ export default function ThisWeek({ currentWeek, currentPlanWeek, weekChange, suf
       </div>
 
       {/* Content */}
-      <div className="p-5 pt-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-light text-neutral-100 tracking-tight m-0">
-            This Week
-            {currentPlanWeek && (
-              <span
-                className="ml-2 text-xs font-medium px-2 py-0.5 rounded"
-                style={{
-                  color: PHASE_COLORS[currentPlanWeek.phase],
-                  backgroundColor: `${PHASE_COLORS[currentPlanWeek.phase]}15`,
-                }}
-              >
-                {PHASE_LABELS[currentPlanWeek.phase]}
-                {currentPlanWeek.cycle_number ? ` · Cycle ${currentPlanWeek.cycle_number}` : ""}
-              </span>
-            )}
-          </h2>
+      <div className="p-5 pt-3">
+        <div className="flex items-center justify-end mb-3">
           <span
             className="text-xs font-medium px-2 py-0.5 rounded"
             style={{
@@ -59,16 +44,19 @@ export default function ThisWeek({ currentWeek, currentPlanWeek, weekChange, suf
               backgroundColor: weekChange >= 0 ? "rgba(163,163,163,0.1)" : "rgba(248,113,113,0.1)",
             }}
           >
-            {weekChange >= 0 ? "\u2191" : "\u2193"} {Math.abs(weekChange).toFixed(0)}%
+            {weekChange >= 0 ? "\u2191" : "\u2193"} {Math.abs(weekChange).toFixed(0)}% vs last week
           </span>
         </div>
 
-        <div className={`grid gap-2.5 ${currentPlanWeek ? "grid-cols-3" : "grid-cols-3"}`}>
+        <div className="grid gap-2.5 grid-cols-3">
           {currentPlanWeek && (
             <div className="bg-neutral-800/30 rounded-lg p-3 border border-neutral-800">
               <div className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">Target</div>
               <div className="text-xl font-light text-neutral-100 tracking-tight">
                 {currentPlanWeek.target_volume_km} km
+              </div>
+              <div className="text-neutral-600 text-[0.6rem] mt-0.5">
+                min {Math.ceil(currentPlanWeek.target_volume_km * 0.9)} km
               </div>
             </div>
           )}
@@ -129,7 +117,7 @@ export default function ThisWeek({ currentWeek, currentPlanWeek, weekChange, suf
               style={{
                 width: `${Math.min(100, (currentWeek.totalDistance / (currentPlanWeek.target_volume_km * 1000)) * 100)}%`,
                 backgroundColor:
-                  currentWeek.totalDistance >= currentPlanWeek.target_volume_km * 1000 ? "#d4d4d4" : "#a3a3a3",
+                  currentWeek.totalDistance >= currentPlanWeek.target_volume_km * 0.9 * 1000 ? "#d4d4d4" : "#a3a3a3",
               }}
             />
           </div>

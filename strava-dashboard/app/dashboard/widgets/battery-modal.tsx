@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Activity } from "@/types";
+import type { Shoe, ShoeType } from "@/types";
 import { formatDate, formatKm } from "@/lib/dashboard-helpers";
+
+const SHOE_TYPE_LABELS: Record<ShoeType, string> = {
+  road: "Road",
+  trail: "Trail",
+  hybrid: "Hybrid",
+  dubb: "Dubb",
+  gore_tex: "Gore-Tex",
+};
 
 interface BatteryModalProps {
   activities: Activity[];
@@ -17,7 +26,13 @@ interface BatteryRow {
   distance: number;
   start: string;
   end: string;
+  shoeId: string; // "" = none selected
   skipped: boolean;
+}
+
+interface NewShoeForm {
+  name: string;
+  type: ShoeType;
 }
 
 export default function BatteryModal({ activities, onClose, onSaved }: BatteryModalProps) {
@@ -29,12 +44,29 @@ export default function BatteryModal({ activities, onClose, onSaved }: BatteryMo
       distance: a.distance,
       start: "",
       end: "",
+      shoeId: "",
       skipped: false,
     })),
   );
   const [saving, setSaving] = useState(false);
+  const [shoes, setShoes] = useState<Shoe[]>([]);
+  const [shoesLoaded, setShoesLoaded] = useState(false);
+  // Per-row "add new shoe" forms
+  const [addingShoeForRow, setAddingShoeForRow] = useState<number | null>(null);
+  const [newShoeForm, setNewShoeForm] = useState<NewShoeForm>({ name: "", type: "road" });
+  const [addingShoeSaving, setAddingShoeSaving] = useState(false);
 
-  function updateRow(idx: number, field: "start" | "end", value: string) {
+  useEffect(() => {
+    fetch("/api/shoes")
+      .then((r) => r.json())
+      .then((data: Shoe[]) => {
+        setShoes(data.filter((s) => s.retired === 0));
+        setShoesLoaded(true);
+      })
+      .catch(() => setShoesLoaded(true));
+  }, []);
+
+  function updateRow(idx: number, field: "start" | "end" | "shoeId", value: string) {
     setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: value } : r)));
   }
 
@@ -42,21 +74,50 @@ export default function BatteryModal({ activities, onClose, onSaved }: BatteryMo
     setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, skipped: !r.skipped } : r)));
   }
 
+  async function saveNewShoe(forRowIdx: number) {
+    const name = newShoeForm.name.trim();
+    if (!name) return;
+    setAddingShoeSaving(true);
+    try {
+      const res = await fetch("/api/shoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, type: newShoeForm.type }),
+      });
+      const created: Shoe = await res.json();
+      setShoes((prev) => [...prev, created]);
+      updateRow(forRowIdx, "shoeId", String(created.id));
+      setAddingShoeForRow(null);
+      setNewShoeForm({ name: "", type: "road" });
+    } finally {
+      setAddingShoeSaving(false);
+    }
+  }
+
   async function saveAll() {
     setSaving(true);
     try {
       for (const row of rows) {
         if (row.skipped) continue;
+
         const s = row.start.trim() === "" ? null : parseInt(row.start, 10);
         const e = row.end.trim() === "" ? null : parseInt(row.end, 10);
-        if (s === null && e === null) continue;
+        if (s !== null || e !== null) {
+          await fetch(`/api/activities/${row.stravaId}/battery`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ battery_start: s, battery_end: e }),
+          });
+          onSaved(row.stravaId, s, e);
+        }
 
-        await fetch(`/api/activities/${row.stravaId}/battery`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ battery_start: s, battery_end: e }),
-        });
-        onSaved(row.stravaId, s, e);
+        if (row.shoeId !== "") {
+          await fetch(`/api/activities/${row.stravaId}/shoe`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ shoe_id: parseInt(row.shoeId, 10) }),
+          });
+        }
       }
       onClose();
     } finally {
@@ -69,81 +130,161 @@ export default function BatteryModal({ activities, onClose, onSaved }: BatteryMo
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-neutral-900 border border-neutral-700 rounded-xl p-5 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto"
+        className="bg-white border border-stone-300 rounded-xl p-5 max-w-xl w-full mx-4 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-neutral-200">Enter Battery Data</h3>
-          <button onClick={onClose} className="text-neutral-500 hover:text-neutral-300 bg-transparent border-none cursor-pointer text-lg">
+          <h3 className="text-sm font-medium text-stone-800">Logga aktivitetsdata</h3>
+          <button onClick={onClose} className="text-stone-500 hover:text-stone-700 bg-transparent border-none cursor-pointer text-lg">
             &times;
           </button>
         </div>
-        <p className="text-xs text-neutral-500 mb-4">
-          Enter start and end battery % for newly synced activities. Leave blank to skip.
+        <p className="text-xs text-stone-500 mb-4">
+          Välj skor och ange klockbatteri för nya aktiviteter. Lämna blankt för att hoppa över.
         </p>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {rows.map((row, idx) => (
             <div
               key={row.stravaId}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg"
+              className="rounded-lg px-3 py-2.5"
               style={{
-                backgroundColor: row.skipped ? "rgba(163,163,163,0.02)" : "rgba(163,163,163,0.06)",
+                backgroundColor: row.skipped ? "rgba(0,0,0,0.01)" : "rgba(0,0,0,0.03)",
                 opacity: row.skipped ? 0.4 : 1,
               }}
             >
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-neutral-300 truncate">{row.name}</div>
-                <div className="text-[0.6rem] text-neutral-600">
-                  {formatDate(row.date)} &middot; {formatKm(row.distance)} km
+              {/* Activity header */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="min-w-0">
+                  <div className="text-xs text-stone-700 truncate">{row.name}</div>
+                  <div className="text-[0.6rem] text-stone-400">
+                    {formatDate(row.date)} &middot; {formatKm(row.distance)} km
+                  </div>
                 </div>
+                <button
+                  onClick={() => toggleSkip(idx)}
+                  className="text-[0.6rem] text-stone-400 hover:text-stone-500 bg-transparent border-none cursor-pointer whitespace-nowrap ml-2"
+                >
+                  {row.skipped ? "Ångra" : "Hoppa"}
+                </button>
               </div>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={row.start}
-                  onChange={(e) => updateRow(idx, "start", e.target.value)}
-                  disabled={row.skipped}
-                  placeholder="%"
-                  className="w-10 text-xs text-center bg-neutral-800 border border-neutral-700 rounded px-1 py-1 text-neutral-200 outline-none focus:border-neutral-500 disabled:opacity-30"
-                />
-                <span className="text-neutral-600 text-[0.55rem]">&rarr;</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={row.end}
-                  onChange={(e) => updateRow(idx, "end", e.target.value)}
-                  disabled={row.skipped}
-                  placeholder="%"
-                  className="w-10 text-xs text-center bg-neutral-800 border border-neutral-700 rounded px-1 py-1 text-neutral-200 outline-none focus:border-neutral-500 disabled:opacity-30"
-                />
-              </div>
-              <button
-                onClick={() => toggleSkip(idx)}
-                className="text-[0.6rem] text-neutral-600 hover:text-neutral-400 bg-transparent border-none cursor-pointer whitespace-nowrap"
-              >
-                {row.skipped ? "Undo" : "Skip"}
-              </button>
+
+              {/* Shoe selector */}
+              {shoesLoaded && !row.skipped && (
+                <div className="mb-2">
+                  {addingShoeForRow === idx ? (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <input
+                        type="text"
+                        placeholder="Märke + modell (t.ex. Hoka Clifton 9)"
+                        value={newShoeForm.name}
+                        onChange={(e) => setNewShoeForm((f) => ({ ...f, name: e.target.value }))}
+                        className="flex-1 min-w-0 text-xs bg-stone-100 border border-stone-300 rounded px-2 py-1 text-stone-800 outline-none focus:border-stone-400"
+                        onKeyDown={(e) => e.key === "Enter" && saveNewShoe(idx)}
+                        autoFocus
+                      />
+                      <select
+                        value={newShoeForm.type}
+                        onChange={(e) => setNewShoeForm((f) => ({ ...f, type: e.target.value as ShoeType }))}
+                        className="text-xs bg-stone-100 border border-stone-300 rounded px-1.5 py-1 text-stone-800 outline-none focus:border-stone-400"
+                      >
+                        {(Object.keys(SHOE_TYPE_LABELS) as ShoeType[]).map((t) => (
+                          <option key={t} value={t}>
+                            {SHOE_TYPE_LABELS[t]}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => saveNewShoe(idx)}
+                        disabled={addingShoeSaving || !newShoeForm.name.trim()}
+                        className="text-xs text-white bg-stone-800 hover:bg-stone-700 disabled:bg-stone-300 border-none rounded px-2 py-1 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        OK
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAddingShoeForRow(null);
+                          setNewShoeForm({ name: "", type: "road" });
+                        }}
+                        className="text-xs text-stone-500 hover:text-stone-700 bg-transparent border border-stone-300 rounded px-2 py-1 cursor-pointer"
+                      >
+                        Avbryt
+                      </button>
+                    </div>
+                  ) : shoes.length === 0 ? (
+                    <button
+                      onClick={() => setAddingShoeForRow(idx)}
+                      className="text-xs text-stone-400 hover:text-stone-600 bg-transparent border border-dashed border-stone-300 hover:border-stone-400 rounded px-2 py-1 cursor-pointer w-full text-left"
+                    >
+                      + Skriv för att lägga till ett par skor
+                    </button>
+                  ) : (
+                    <select
+                      value={row.shoeId}
+                      onChange={(e) => {
+                        if (e.target.value === "__new__") {
+                          setAddingShoeForRow(idx);
+                          setNewShoeForm({ name: "", type: "road" });
+                        } else {
+                          updateRow(idx, "shoeId", e.target.value);
+                        }
+                      }}
+                      className="w-full text-xs bg-stone-100 border border-stone-300 rounded px-2 py-1 text-stone-800 outline-none focus:border-stone-400"
+                    >
+                      <option value="">— Välj ett par skor —</option>
+                      {shoes.map((s) => (
+                        <option key={s.id} value={String(s.id)}>
+                          {s.name} ({SHOE_TYPE_LABELS[s.type]})
+                        </option>
+                      ))}
+                      <option value="__new__">+ Lägg till ett nytt par skor</option>
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {/* Battery inputs */}
+              {!row.skipped && (
+                <div className="flex items-center gap-1">
+                  <span className="text-[0.6rem] text-stone-400 mr-1">Batteri</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={row.start}
+                    onChange={(e) => updateRow(idx, "start", e.target.value)}
+                    placeholder="%"
+                    className="w-10 text-xs text-center bg-stone-100 border border-stone-300 rounded px-1 py-1 text-stone-800 outline-none focus:border-stone-400"
+                  />
+                  <span className="text-stone-400 text-[0.55rem]">&rarr;</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={row.end}
+                    onChange={(e) => updateRow(idx, "end", e.target.value)}
+                    placeholder="%"
+                    className="w-10 text-xs text-center bg-stone-100 border border-stone-300 rounded px-1 py-1 text-stone-800 outline-none focus:border-stone-400"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
 
-        <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-neutral-800">
+        <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-stone-200">
           <button
             onClick={onClose}
-            className="text-xs text-neutral-500 hover:text-neutral-300 bg-transparent border border-neutral-700 hover:border-neutral-500 rounded-lg px-3 py-1.5 cursor-pointer transition-all"
+            className="text-xs text-stone-500 hover:text-stone-700 bg-transparent border border-stone-300 hover:border-stone-400 rounded-lg px-3 py-1.5 cursor-pointer transition-all"
           >
-            Skip All
+            Hoppa över alla
           </button>
           <button
             onClick={saveAll}
             disabled={saving || activeRows.length === 0}
-            className="text-xs text-neutral-900 bg-neutral-200 hover:bg-neutral-300 disabled:bg-neutral-600 disabled:text-neutral-400 border-none rounded-lg px-3 py-1.5 cursor-pointer transition-all disabled:cursor-not-allowed"
+            className="text-xs text-white bg-stone-800 hover:bg-stone-700 disabled:bg-stone-300 disabled:text-stone-500 border-none rounded-lg px-3 py-1.5 cursor-pointer transition-all disabled:cursor-not-allowed"
           >
-            {saving ? "Saving..." : "Save All"}
+            {saving ? "Sparar..." : "Spara alla"}
           </button>
         </div>
       </div>

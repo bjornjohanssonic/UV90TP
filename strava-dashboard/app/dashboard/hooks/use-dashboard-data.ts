@@ -4,23 +4,50 @@ import { aggregateWeeks, generateNextActions, getMonday, toLocalDateStr } from "
 
 function computeStreaks(weeks: WeekData[]): StreakData {
   // A "streak week" = week with 3+ runs
-  // Sorted newest first in `weeks`
+  // `weeks` only contains weeks with actual runs — missing weeks (0 runs) are gaps.
+  // We need to fill those gaps so they correctly break streaks.
+  // Exclude the current (incomplete) week.
+  if (weeks.length === 0) return { currentStreak: 0, longestStreak: 0, consistency: 0 };
+
+  const currentMonday = toLocalDateStr(getMonday(new Date()));
+
+  // Build a map of weekStart → run count
+  const weekMap = new Map<string, number>();
+  for (const w of weeks) {
+    if (w.weekStart !== currentMonday) {
+      weekMap.set(w.weekStart, w.runs);
+    }
+  }
+
+  // Generate a continuous list of Mondays from last week backwards
+  // (enough to cover all data + find streaks)
+  const lastMonday = new Date(currentMonday + "T00:00:00");
+  lastMonday.setDate(lastMonday.getDate() - 7); // previous week (most recent completed)
+  const numWeeks = Math.max(weekMap.size + 8, 52); // at least a year back
+  const completedWeeks: number[] = []; // run counts, newest first
+  for (let i = 0; i < numWeeks; i++) {
+    const monday = new Date(lastMonday);
+    monday.setDate(monday.getDate() - i * 7);
+    const key = toLocalDateStr(monday);
+    completedWeeks.push(weekMap.get(key) ?? 0);
+  }
+
   let currentStreak = 0;
   let longestStreak = 0;
   let tempStreak = 0;
 
-  // Check from newest to oldest for current streak
-  for (const w of weeks) {
-    if (w.runs >= 3) {
+  // Current streak: consecutive weeks from newest backwards with 3+ runs
+  for (const runs of completedWeeks) {
+    if (runs >= 2) {
       currentStreak++;
     } else {
       break;
     }
   }
 
-  // Find longest streak across all weeks
-  for (const w of weeks) {
-    if (w.runs >= 3) {
+  // Longest streak across all weeks
+  for (const runs of completedWeeks) {
+    if (runs >= 2) {
       tempStreak++;
       longestStreak = Math.max(longestStreak, tempStreak);
     } else {
@@ -28,15 +55,17 @@ function computeStreaks(weeks: WeekData[]): StreakData {
     }
   }
 
-  // Consistency: % of last 8 weeks with 3+ runs
-  const last8 = weeks.slice(0, 8);
-  const consistency = last8.length > 0 ? Math.round((last8.filter((w) => w.runs >= 3).length / last8.length) * 100) : 0;
+  // Consistency: % of last 8 completed weeks with 3+ runs
+  const last8 = completedWeeks.slice(0, 8);
+  const consistency = last8.length > 0 ? Math.round((last8.filter((r) => r >= 3).length / last8.length) * 100) : 0;
 
   return { currentStreak, longestStreak, consistency };
 }
 
 function computePlanAdherence(planWeeks: PlanWeek[]): PlanAdherence | null {
-  const completedWeeks = planWeeks.filter((w) => w.actualVolumeKm > 0);
+  // Exclude the current (incomplete) week — its partial volume would drag down stats
+  const currentMonday = toLocalDateStr(getMonday(new Date()));
+  const completedWeeks = planWeeks.filter((w) => w.actualVolumeKm > 0 && w.start_date !== currentMonday);
   if (completedWeeks.length === 0) return null;
 
   // Overall adherence: % of weeks where actual >= 90% of target (flexible threshold)

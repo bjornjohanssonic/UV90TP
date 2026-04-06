@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { COLORS } from "@/lib/dashboard-helpers";
-import type { Activity } from "@/types";
+import type { Activity, Shoe } from "@/types";
 import ThisWeek from "./widgets/this-week";
 import WeekDetail from "./widgets/week-detail";
 import RecentRuns from "./widgets/recent-runs";
@@ -49,6 +49,12 @@ export default function Dashboard() {
   const [selectedWeekStart, setSelectedWeekStart] = useState<string | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [showBatteryModal, setShowBatteryModal] = useState(false);
+  const [shoes, setShoes] = useState<Shoe[]>([]);
+
+  const loadShoes = useCallback(async () => {
+    const res = await fetch("/api/shoes");
+    if (res.ok) setShoes(await res.json());
+  }, []);
 
   // Show battery modal when sync completes with new activities
   useEffect(() => {
@@ -68,7 +74,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData().then(() => setLoaded(true));
-  }, [loadData]);
+    loadShoes();
+  }, [loadData, loadShoes]);
 
   // Auto-sync only when data has loaded and there are truly no activities
   useEffect(() => {
@@ -110,10 +117,10 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-2.5">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-light text-neutral-100 tracking-tight m-0">Ground Control</h1>
+          <h1 className="text-3xl font-light text-stone-800 tracking-tight m-0">Ground Control</h1>
           {plan && daysToRace > 0 && (
             <span
-              className="text-sm font-medium text-neutral-400 bg-neutral-800/60 px-3 py-1 rounded-lg border border-neutral-700"
+              className="text-sm font-medium text-stone-500 bg-stone-100/80 px-3 py-1 rounded-lg border border-stone-300"
               data-tooltip={`${daysToRace} days until ${plan.race_name || "race"} (${plan.race_distance_km} km) on ${plan.race_date}`}
             >
               {plan.race_name || `${plan.race_distance_km} km`} &middot; {daysToRace} days
@@ -123,14 +130,20 @@ export default function Dashboard() {
         <div className="flex gap-2.5 items-center">
           <a
             href="/training-plan"
-            className="border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-200 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
+            className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
           >
             Training Plan
+          </a>
+          <a
+            href="/shoes"
+            className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
+          >
+            Skor
           </a>
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="bg-neutral-200 text-neutral-900 hover:bg-neutral-300 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed border-none rounded-lg px-4 py-2 text-sm font-medium cursor-pointer transition-all"
+            className="bg-stone-800 text-white hover:bg-stone-700 disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed border-none rounded-lg px-4 py-2 text-sm font-medium cursor-pointer transition-all"
           >
             {syncing ? "Syncing..." : "Sync"}
           </button>
@@ -139,19 +152,19 @@ export default function Dashboard() {
 
       {/* Sync progress */}
       {syncing && syncStatus && (
-        <div className="bg-neutral-900/40 rounded-xl px-4 py-3 mb-4 flex items-center gap-2.5 border border-neutral-800">
-          <div className="w-3.5 h-3.5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
-          <span className="text-neutral-300 text-sm">{syncStatus}</span>
-          {syncCount > 0 && <span className="text-neutral-500 text-xs ml-auto">{syncCount} saved</span>}
+        <div className="bg-white/60 rounded-xl px-4 py-3 mb-4 flex items-center gap-2.5 border border-stone-200">
+          <div className="w-3.5 h-3.5 border-2 border-stone-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-stone-700 text-sm">{syncStatus}</span>
+          {syncCount > 0 && <span className="text-stone-500 text-xs ml-auto">{syncCount} saved</span>}
         </div>
       )}
 
       {syncResult && (
         <p
-          className="mb-4 text-sm px-3 py-3 rounded-lg bg-neutral-900/40"
+          className="mb-4 text-sm px-3 py-3 rounded-lg bg-white/60"
           style={{
             color: syncResult.type === "error" ? COLORS.error : COLORS.textMuted,
-            border: `1px solid ${syncResult.type === "error" ? "rgba(248,113,113,0.2)" : "rgba(163,163,163,0.15)"}`,
+            border: `1px solid ${syncResult.type === "error" ? "rgba(220,38,38,0.2)" : "rgba(0,0,0,0.08)"}`,
           }}
         >
           {syncResult.message}
@@ -159,7 +172,7 @@ export default function Dashboard() {
       )}
 
       {activities.length === 0 && !syncing && (
-        <p className="text-neutral-500 text-center mt-16 text-sm">No activities yet. Syncing automatically...</p>
+        <p className="text-stone-500 text-center mt-16 text-sm">No activities yet. Syncing automatically...</p>
       )}
 
       {activities.length > 0 && (
@@ -190,22 +203,22 @@ export default function Dashboard() {
           {/* Tips */}
           <TipPanel tips={tips} />
 
-          {/* Run Map */}
-          <RunMap selectedActivity={selectedActivity} />
-
-          {/* Week Detail */}
-          {effectiveWeekStart && (
-            <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-all">
-              <WeekDetail
-                activities={activities}
-                selectedWeekStart={effectiveWeekStart}
-                selectedActivityId={selectedActivity?.strava_id ?? null}
-                onSelectActivity={setSelectedActivity}
-                onWeekChange={setSelectedWeekStart}
-                weeks={weeks}
-              />
-            </div>
-          )}
+          {/* Run Map + Week Detail — side by side */}
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+            <RunMap selectedActivity={selectedActivity} />
+            {effectiveWeekStart && (
+              <div className="bg-white border border-stone-200 rounded-xl p-5 hover:border-stone-300 transition-all">
+                <WeekDetail
+                  activities={activities}
+                  selectedWeekStart={effectiveWeekStart}
+                  selectedActivityId={selectedActivity?.strava_id ?? null}
+                  onSelectActivity={setSelectedActivity}
+                  onWeekChange={setSelectedWeekStart}
+                  weeks={weeks}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Plan Adherence + Streak Tracker */}
           {(adherence || streaks) && (
@@ -216,11 +229,11 @@ export default function Dashboard() {
           )}
 
           {/* Recent Runs */}
-          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-all">
-            <RecentRuns runs={runs} onBatteryUpdate={handleBatteryUpdate} />
+          <div className="bg-white border border-stone-200 rounded-xl p-5 hover:border-stone-300 transition-all">
+            <RecentRuns runs={runs} shoes={shoes} onBatteryUpdate={handleBatteryUpdate} />
           </div>
 
-          <p className="text-neutral-600 text-xs text-center px-3 py-3 bg-neutral-900/30 rounded-lg">
+          <p className="text-stone-400 text-xs text-center px-3 py-3 bg-white/40 rounded-lg">
             {activities.length} activities cached &middot; {runs.length} runs
           </p>
         </div>
@@ -232,6 +245,8 @@ export default function Dashboard() {
           onClose={() => {
             setShowBatteryModal(false);
             clearSyncedIds();
+            loadShoes();
+            loadActivities();
           }}
           onSaved={handleBatteryUpdate}
         />

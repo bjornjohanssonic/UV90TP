@@ -5,8 +5,13 @@ export interface SessionData {
   athleteId?: string;
 }
 
+const _secret = process.env.SESSION_SECRET;
+if (!_secret && process.env.NODE_ENV === "production") {
+  throw new Error("SESSION_SECRET environment variable is required in production");
+}
+
 const sessionOptions = {
-  password: process.env.SESSION_SECRET || "fallback-secret-must-be-at-least-32-chars-long!!",
+  password: _secret ?? "dev-only-secret-not-for-production-min-32-chars!",
   cookieName: "strava-session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",

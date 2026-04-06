@@ -17,19 +17,19 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const plan = getActivePlan();
+  const plan = await getActivePlan(athleteId);
   if (!plan) {
     return NextResponse.json({ plan: null });
   }
 
-  const weeks = getPlanWeeks(plan.id as number);
+  const weeks = await getPlanWeeks(plan.id as number);
 
   if (weeks.length === 0) {
     return NextResponse.json({ plan, weeks: [] });
   }
 
-  const runVolumes = getWeeklyRunVolumes(plan.id as number);
-  const gymCounts = getWeeklyGymCounts(plan.id as number);
+  const runVolumes = await getWeeklyRunVolumes(plan.id as number, athleteId);
+  const gymCounts = await getWeeklyGymCounts(plan.id as number, athleteId);
 
   const volumeMap = new Map(runVolumes.map((r) => [r.week_start, r]));
   const gymMap = new Map(gymCounts.map((r) => [r.week_start, r]));
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
   try {
     const generated = generatePlan(config);
 
-    deactivateAllPlans();
-    const { planId } = createPlan(generated);
+    await deactivateAllPlans(athleteId);
+    const { planId } = await createPlan(generated, athleteId);
 
     return NextResponse.json({ id: planId, plan: generated });
   } catch (error) {
@@ -76,6 +76,6 @@ export async function DELETE(request: NextRequest) {
   }
 
   const { id } = await request.json();
-  deletePlan(id);
+  await deletePlan(id);
   return NextResponse.json({ success: true });
 }

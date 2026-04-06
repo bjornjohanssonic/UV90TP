@@ -7,6 +7,6 @@ export async function GET() {
   if (!athleteId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-  const activities = getAllActivities();
+  const activities = await getAllActivities(athleteId);
   return NextResponse.json(activities);
 }

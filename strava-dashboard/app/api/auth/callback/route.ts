@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const tokenData = await exchangeCodeForTokens(code);
     const athleteId = String(tokenData.athlete.id);
 
-    upsertUser(athleteId, tokenData.access_token, tokenData.refresh_token, tokenData.expires_at);
+    await upsertUser(athleteId, tokenData.access_token, tokenData.refresh_token, tokenData.expires_at);
 
     const session = await getSession();
     session.athleteId = athleteId;

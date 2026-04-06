@@ -19,7 +19,7 @@ export async function exchangeCodeForTokens(code: string): Promise<TokenResponse
 }
 
 export async function refreshAccessToken(athleteId: string): Promise<string> {
-  const user = getUserByAthleteId(athleteId);
+  const user = await getUserByAthleteId(athleteId);
 
   if (!user) {
     throw new Error("User not found");
@@ -39,7 +39,7 @@ export async function refreshAccessToken(athleteId: string): Promise<string> {
 
   const { access_token, refresh_token, expires_at } = response.data;
 
-  updateUserTokens(athleteId, access_token, refresh_token, expires_at);
+  await updateUserTokens(athleteId, access_token, refresh_token, expires_at);
 
   return access_token;
 }

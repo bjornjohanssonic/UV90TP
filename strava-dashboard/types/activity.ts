@@ -16,6 +16,7 @@ export interface Activity {
   summary_polyline: string | null;
   battery_start: number | null;
   battery_end: number | null;
+  shoe_id: number | null;
 }
 
 export interface WeekData {

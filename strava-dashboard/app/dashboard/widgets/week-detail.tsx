@@ -58,22 +58,22 @@ export default function WeekDetail({ activities, selectedWeekStart, selectedActi
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-neutral-500">
+        <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-stone-500">
           Week Detail
-          <span className="ml-2 text-neutral-600 normal-case tracking-normal">{weekHeader}</span>
+          <span className="ml-2 text-stone-400 normal-case tracking-normal">{weekHeader}</span>
         </h2>
         <div className="flex items-center gap-1">
           <button
             onClick={() => hasPrev && onWeekChange(weeks[currentIdx + 1].weekStart)}
             disabled={!hasPrev}
-            className="w-7 h-7 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 disabled:text-neutral-700 disabled:hover:bg-transparent transition-all border-none bg-transparent cursor-pointer disabled:cursor-not-allowed"
+            className="w-7 h-7 flex items-center justify-center rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-100 disabled:text-stone-300 disabled:hover:bg-transparent transition-all border-none bg-transparent cursor-pointer disabled:cursor-not-allowed"
           >
             &larr;
           </button>
           <button
             onClick={() => hasNext && onWeekChange(weeks[currentIdx - 1].weekStart)}
             disabled={!hasNext}
-            className="w-7 h-7 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 disabled:text-neutral-700 disabled:hover:bg-transparent transition-all border-none bg-transparent cursor-pointer disabled:cursor-not-allowed"
+            className="w-7 h-7 flex items-center justify-center rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-100 disabled:text-stone-300 disabled:hover:bg-transparent transition-all border-none bg-transparent cursor-pointer disabled:cursor-not-allowed"
           >
             &rarr;
           </button>
@@ -94,27 +94,27 @@ export default function WeekDetail({ activities, selectedWeekStart, selectedActi
               key={dayIdx}
               className="rounded-lg transition-all"
               style={{
-                backgroundColor: isToday ? "rgba(163,163,163,0.08)" : "rgba(163,163,163,0.03)",
-                border: isToday ? "1px solid #525252" : "1px solid #262626",
+                backgroundColor: isToday ? "rgba(0,0,0,0.04)" : "rgba(0,0,0,0.015)",
+                border: isToday ? "1px solid #D4CCC0" : "1px solid #E5DFD5",
                 opacity: isFuture && isCurrentWeek ? 0.5 : 1,
                 padding: acts.length > 0 ? "8px 12px" : "6px 12px",
               }}
             >
               <div className={`flex items-center gap-3 ${acts.length > 0 ? "mb-1.5" : ""}`}>
-                <span className="text-xs font-medium w-8" style={{ color: isToday ? "#d4d4d4" : "#737373" }}>
+                <span className="text-xs font-medium w-8" style={{ color: isToday ? "#2D2B28" : "#8A847B" }}>
                   {dayName}
                 </span>
-                <span className="text-[0.65rem] text-neutral-600">
+                <span className="text-[0.65rem] text-stone-400">
                   {dayDate.toLocaleDateString("sv-SE", { day: "numeric", month: "short" })}
                 </span>
                 {acts.length === 0 && isPast && (
-                  <span className="text-[0.65rem] text-neutral-700 ml-auto">Rest day</span>
+                  <span className="text-[0.65rem] text-stone-300 ml-auto">Rest day</span>
                 )}
                 {acts.length === 0 && isFuture && isCurrentWeek && (
-                  <span className="text-[0.65rem] text-neutral-700 ml-auto">Upcoming</span>
+                  <span className="text-[0.65rem] text-stone-300 ml-auto">Upcoming</span>
                 )}
                 {isToday && (
-                  <span className="text-[0.55rem] uppercase tracking-wider font-medium text-neutral-400 bg-neutral-800 px-1.5 py-0.5 rounded ml-auto">
+                  <span className="text-[0.55rem] uppercase tracking-wider font-medium text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded ml-auto">
                     Today
                   </span>
                 )}
@@ -128,37 +128,37 @@ export default function WeekDetail({ activities, selectedWeekStart, selectedActi
                       <div
                         key={act.strava_id}
                         className={`flex items-center gap-2 text-xs rounded px-2 py-1 -mx-2 transition-all ${
-                          isRun ? "cursor-pointer hover:bg-neutral-800/60" : ""
+                          isRun ? "cursor-pointer hover:bg-stone-100/80" : ""
                         }`}
                         style={{
-                          borderLeft: isSelected ? "2px solid #d4d4d4" : "2px solid transparent",
-                          backgroundColor: isSelected ? "rgba(163,163,163,0.08)" : undefined,
+                          borderLeft: isSelected ? "2px solid #4A4743" : "2px solid transparent",
+                          backgroundColor: isSelected ? "rgba(0,0,0,0.04)" : undefined,
                         }}
                         onClick={() => isRun && onSelectActivity(act)}
                       >
-                        <span className="text-[0.6rem] uppercase tracking-wider font-medium text-neutral-500 w-8">
+                        <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-500 w-8">
                           {TYPE_ABBREVS[act.type] || act.type.slice(0, 4).toUpperCase()}
                         </span>
-                        <span className={`truncate flex-1 min-w-0 ${isSelected ? "text-neutral-100" : "text-neutral-300"}`}>
+                        <span className={`truncate flex-1 min-w-0 ${isSelected ? "text-stone-800" : "text-stone-700"}`}>
                           {act.name}
                         </span>
-                        <span className="text-neutral-600 text-[0.6rem] whitespace-nowrap">{formatTimeOfDay(act.start_date)}</span>
+                        <span className="text-stone-400 text-[0.6rem] whitespace-nowrap">{formatTimeOfDay(act.start_date)}</span>
                         {act.distance > 0 && (
-                          <span className="text-neutral-400 whitespace-nowrap">{formatKm(act.distance)} km</span>
+                          <span className="text-stone-500 whitespace-nowrap">{formatKm(act.distance)} km</span>
                         )}
-                        <span className="text-neutral-500 whitespace-nowrap">{formatTime(act.moving_time)}</span>
+                        <span className="text-stone-500 whitespace-nowrap">{formatTime(act.moving_time)}</span>
                         {act.type === "Run" && act.distance > 0 && (
-                          <span className="text-neutral-500 whitespace-nowrap">
+                          <span className="text-stone-500 whitespace-nowrap">
                             {formatPace(act.distance, act.moving_time)}/km
                           </span>
                         )}
                         {act.average_heartrate && (
-                          <span className="text-neutral-600 whitespace-nowrap">
+                          <span className="text-stone-400 whitespace-nowrap">
                             {Math.round(act.average_heartrate)} bpm
                           </span>
                         )}
                         {act.suffer_score && (
-                          <span className="text-neutral-600 whitespace-nowrap text-[0.6rem]">
+                          <span className="text-stone-400 whitespace-nowrap text-[0.6rem]">
                             {Math.round(act.suffer_score)} effort
                           </span>
                         )}

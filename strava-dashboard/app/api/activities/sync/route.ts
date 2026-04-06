@@ -1,6 +1,11 @@
 import axios from "axios";
 import { refreshAccessToken } from "@/lib/strava";
-import { getMostRecentActivityDate, getActivitySplits, upsertActivity, countActivitiesMissingPolyline, getActivitiesMissingPolyline } from "@/lib/repositories";
+import {
+  getMostRecentActivityDate,
+  getActivitySplits,
+  upsertActivity,
+  getActivitiesMissingPolyline,
+} from "@/lib/repositories";
 import { getAuthenticatedAthleteId } from "@/lib/session";
 
 interface StravaActivity {
@@ -41,7 +46,7 @@ export async function POST() {
       try {
         const accessToken = await refreshAccessToken(athleteId);
 
-        const mostRecent = getMostRecentActivityDate();
+        const mostRecent = await getMostRecentActivityDate(athleteId);
 
         // Use most recent activity date when we have data, otherwise fetch from Aug 2025
         const after = mostRecent
@@ -86,12 +91,12 @@ export async function POST() {
           });
 
           for (const act of activities) {
-            const existing = getActivitySplits(String(act.id));
+            const existing = await getActivitySplits(String(act.id));
 
             let splitsJson: string | null = null;
             let summaryPolyline: string | null = null;
 
-            if (!existing?.splits || !existing?.summary_polyline || existing.summary_polyline === "") {
+            if (!existing?.splits) {
               try {
                 const detail = await axios.get<StravaActivity>(`https://www.strava.com/api/v3/activities/${act.id}`, {
                   headers: { Authorization: `Bearer ${accessToken}` },
@@ -114,7 +119,7 @@ export async function POST() {
               summaryPolyline = existing.summary_polyline;
             }
 
-            upsertActivity({
+            await upsertActivity({
               strava_id: String(act.id),
               name: act.name,
               type: act.type,
@@ -130,6 +135,7 @@ export async function POST() {
               suffer_score: act.suffer_score ?? null,
               splits: splitsJson,
               summary_polyline: summaryPolyline,
+              athlete_id: athleteId,
             });
             total++;
 
@@ -150,7 +156,7 @@ export async function POST() {
         // Polyline backfill pass: fetch details for activities missing polyline data
         let backfilled = 0;
         if (!rateLimited) {
-          const missingPolylines = getActivitiesMissingPolyline();
+          const missingPolylines = await getActivitiesMissingPolyline(athleteId);
           if (missingPolylines.length > 0) {
             send({ type: "status", message: `Backfilling route data for ${missingPolylines.length} activities...` });
             for (const { strava_id, name } of missingPolylines) {
@@ -161,8 +167,8 @@ export async function POST() {
                 const summaryPolyline = detail.data.map?.summary_polyline || null;
                 const splitsJson = detail.data.splits_metric ? JSON.stringify(detail.data.splits_metric) : null;
                 if (summaryPolyline || splitsJson) {
-                  const existing = getActivitySplits(strava_id);
-                  upsertActivity({
+                  const existing = await getActivitySplits(strava_id);
+                  await upsertActivity({
                     strava_id,
                     name: detail.data.name,
                     type: detail.data.type,
@@ -178,6 +184,7 @@ export async function POST() {
                     suffer_score: detail.data.suffer_score ?? null,
                     splits: splitsJson || existing?.splits || null,
                     summary_polyline: summaryPolyline || existing?.summary_polyline || null,
+                    athlete_id: athleteId,
                   });
                   backfilled++;
                 }

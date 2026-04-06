@@ -68,13 +68,13 @@ export default function EditableBatteryCell({ stravaId, batteryStart, batteryEnd
           value={start}
           onChange={(e) => setStart(e.target.value)}
           placeholder="S"
-          className="w-8 text-[0.65rem] text-center bg-neutral-800 border border-neutral-700 rounded px-0.5 py-0.5 text-neutral-200 outline-none focus:border-neutral-500"
+          className="w-8 text-[0.65rem] text-center bg-stone-100 border border-stone-300 rounded px-0.5 py-0.5 text-stone-800 outline-none focus:border-stone-400"
           onKeyDown={(e) => {
             if (e.key === "Enter") save();
             if (e.key === "Escape") setEditing(false);
           }}
         />
-        <span className="text-neutral-600 text-[0.5rem]">&rarr;</span>
+        <span className="text-stone-400 text-[0.5rem]">&rarr;</span>
         <input
           type="number"
           min={0}
@@ -82,7 +82,7 @@ export default function EditableBatteryCell({ stravaId, batteryStart, batteryEnd
           value={end}
           onChange={(e) => setEnd(e.target.value)}
           placeholder="E"
-          className="w-8 text-[0.65rem] text-center bg-neutral-800 border border-neutral-700 rounded px-0.5 py-0.5 text-neutral-200 outline-none focus:border-neutral-500"
+          className="w-8 text-[0.65rem] text-center bg-stone-100 border border-stone-300 rounded px-0.5 py-0.5 text-stone-800 outline-none focus:border-stone-400"
           onKeyDown={(e) => {
             if (e.key === "Enter") save();
             if (e.key === "Escape") setEditing(false);
@@ -91,7 +91,7 @@ export default function EditableBatteryCell({ stravaId, batteryStart, batteryEnd
         <button
           onClick={save}
           disabled={saving}
-          className="text-[0.55rem] text-neutral-400 hover:text-neutral-200 bg-transparent border-none cursor-pointer px-0.5"
+          className="text-[0.55rem] text-stone-500 hover:text-stone-800 bg-transparent border-none cursor-pointer px-0.5"
         >
           {saving ? "..." : "\u2713"}
         </button>
@@ -101,7 +101,7 @@ export default function EditableBatteryCell({ stravaId, batteryStart, batteryEnd
 
   return (
     <span
-      className={`text-xs cursor-pointer hover:text-neutral-300 transition-colors ${hasBattery ? "text-neutral-400" : "text-neutral-700"}`}
+      className={`text-xs cursor-pointer hover:text-stone-700 transition-colors ${hasBattery ? "text-stone-500" : "text-stone-300"}`}
       onClick={(e) => {
         e.stopPropagation();
         setStart(batteryStart?.toString() ?? "");

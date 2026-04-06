@@ -36,6 +36,7 @@ function makeActivity(overrides: Partial<Activity> = {}): Activity {
     summary_polyline: null,
     battery_start: null,
     battery_end: null,
+    shoe_id: null,
     ...overrides,
   };
 }

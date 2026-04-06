@@ -152,7 +152,7 @@ export default function TrainingPlanPage() {
   if (loading) {
     return (
       <main className="max-w-[1040px] mx-auto px-4 py-8 min-h-screen flex justify-center items-center">
-        <p className="text-neutral-500 text-sm">Loading...</p>
+        <p className="text-stone-500 text-sm">Loading...</p>
       </main>
     );
   }
@@ -162,18 +162,18 @@ export default function TrainingPlanPage() {
     return (
       <main className="max-w-[1040px] mx-auto px-4 py-8 min-h-screen">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-light text-neutral-100 tracking-tight m-0">Training Plan</h1>
+          <h1 className="text-3xl font-light text-stone-800 tracking-tight m-0">Training Plan</h1>
           <a
             href="/dashboard"
-            className="border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-200 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
+            className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
           >
             &larr; Dashboard
           </a>
         </div>
 
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-7 max-w-[550px]">
-          <h2 className="text-lg font-medium text-neutral-100 mt-0 mb-3">Set Up Your Race Plan</h2>
-          <p className="text-neutral-500 text-sm mb-6 leading-relaxed">
+        <div className="bg-white border border-stone-200 rounded-xl p-7 max-w-[550px]">
+          <h2 className="text-lg font-medium text-stone-800 mt-0 mb-3">Set Up Your Race Plan</h2>
+          <p className="text-stone-500 text-sm mb-6 leading-relaxed">
             Enter your race details and current fitness. The plan uses conservative progressive overload with recovery
             every 4 weeks, 3 back-to-back weekends in peak phase, and a 4-week taper. Volume targets have a 10%
             flexibility range.
@@ -181,74 +181,74 @@ export default function TrainingPlanPage() {
 
           <div className="flex flex-col gap-4">
             {/* Race details */}
-            <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-1">Race</div>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-1">Race</div>
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Race Name
               <input
                 type="text"
                 value={raceName}
                 onChange={(e) => setRaceName(e.target.value)}
                 placeholder="e.g. Ultravasan 90"
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Optional. Shown in headers and race countdown.
               </span>
             </label>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Race Date
               <input
                 type="date"
                 value={raceDate}
                 onChange={(e) => setRaceDate(e.target.value)}
-                style={{ colorScheme: "dark" }}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                style={{ colorScheme: "light" }}
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 The plan builds backwards from this date with a 4-week taper.
               </span>
             </label>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Race Distance (km)
               <input
                 type="number"
                 value={raceDistance}
                 onChange={(e) => setRaceDistance(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Total race distance. Used to suggest peak volume if not set manually.
               </span>
             </label>
 
             {/* Schedule */}
-            <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-3 border-t border-neutral-800/50">Schedule</div>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-3 border-t border-stone-200/60">Schedule</div>
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Total Plan Weeks
               <input
                 type="number"
                 value={totalWeeks}
                 onChange={(e) => setTotalWeeks(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Full plan duration including 4 weeks of taper. 24-28 weeks typical for ultra.
               </span>
             </label>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Plan Start Date
               <input
                 type="date"
                 value={planStartDate}
                 onChange={(e) => setPlanStartDate(e.target.value)}
-                style={{ colorScheme: "dark" }}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                style={{ colorScheme: "light" }}
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Optional. Leave empty to start from this week. Set to a past Monday to include weeks already trained.
               </span>
             </label>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               First Rest Week
               <input
                 type="number"
@@ -256,70 +256,70 @@ export default function TrainingPlanPage() {
                 max="6"
                 value={firstRecoveryWeek}
                 onChange={(e) => setFirstRecoveryWeek(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 First recovery week (65% volume), then every 4 weeks. Set to 2-3 if already training.
               </span>
             </label>
 
             {/* Current fitness */}
-            <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-3 border-t border-neutral-800/50">Current Fitness</div>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-3 border-t border-stone-200/60">Current Fitness</div>
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Current Weekly Volume (km)
               <input
                 type="number"
                 value={startingVolume}
                 onChange={(e) => setStartingVolume(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Your average weekly running distance right now. The plan builds up from here.
               </span>
             </label>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Current Long Run (km)
               <input
                 type="number"
                 value={startingLongRun}
                 onChange={(e) => setStartingLongRun(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Your longest recent single run. Long runs progress gradually from this distance.
               </span>
             </label>
 
             {/* Targets */}
-            <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-3 border-t border-neutral-800/50">Targets</div>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-semibold pt-3 border-t border-stone-200/60">Targets</div>
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Target Peak Volume (km)
               <input
                 type="number"
                 value={peakVolume}
                 onChange={(e) => setPeakVolume(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Highest weekly volume before taper. 55-70 km typical for hobby ultra runners.
               </span>
             </label>
-            <label className="text-neutral-300 text-sm font-medium flex flex-col gap-1.5">
+            <label className="text-stone-700 text-sm font-medium flex flex-col gap-1.5">
               Max Long Run (km)
               <input
                 type="number"
                 value={maxLongRun}
                 onChange={(e) => setMaxLongRun(e.target.value)}
-                className="bg-neutral-900 border border-neutral-800 focus:border-neutral-600 rounded-lg px-3.5 py-3 text-sm font-normal text-neutral-200 outline-none transition-colors"
+                className="bg-white border border-stone-200 focus:border-stone-400 rounded-lg px-3.5 py-3 text-sm font-normal text-stone-800 outline-none transition-colors"
               />
-              <span className="text-neutral-600 text-xs font-normal">
+              <span className="text-stone-400 text-xs font-normal">
                 Hard cap on any single long run. Ultra coaches recommend 30-35 km max.
               </span>
             </label>
           </div>
 
           {error && (
-            <p className="text-sm mt-3 px-3 py-2.5 rounded-lg bg-red-900/10 border border-red-900/30 text-red-400">
+            <p className="text-sm mt-3 px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-red-400">
               {error}
             </p>
           )}
@@ -327,7 +327,7 @@ export default function TrainingPlanPage() {
           <button
             onClick={handleCreate}
             disabled={creating}
-            className="bg-neutral-200 text-neutral-900 hover:bg-neutral-300 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed border-none rounded-lg px-7 py-3.5 text-base font-semibold cursor-pointer mt-6 w-full transition-all"
+            className="bg-stone-800 text-white hover:bg-stone-700 disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed border-none rounded-lg px-7 py-3.5 text-base font-semibold cursor-pointer mt-6 w-full transition-all"
           >
             {creating ? "Generating..." : "Generate Plan"}
           </button>
@@ -352,11 +352,11 @@ export default function TrainingPlanPage() {
     <main className="max-w-[1040px] mx-auto px-4 py-8 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-light text-neutral-100 tracking-tight m-0">{plan.name}</h1>
+        <h1 className="text-3xl font-light text-stone-800 tracking-tight m-0">{plan.name}</h1>
         <div className="flex gap-2.5 items-center">
           <a
             href="/dashboard"
-            className="border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-200 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
+            className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
           >
             &larr; Dashboard
           </a>
@@ -365,13 +365,13 @@ export default function TrainingPlanPage() {
               <span className="text-red-400 text-xs font-medium mr-1">Delete this plan?</span>
               <button
                 onClick={handleDelete}
-                className="bg-red-900/30 text-red-400 border border-red-900/50 hover:bg-red-900/50 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer transition-all"
+                className="bg-red-50 text-red-400 border border-red-200 hover:bg-red-100 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer transition-all"
               >
                 Yes, delete
               </button>
               <button
                 onClick={() => setDeleteConfirming(false)}
-                className="bg-transparent text-neutral-400 border border-neutral-700 hover:border-neutral-500 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all"
+                className="bg-transparent text-stone-500 border border-stone-300 hover:border-stone-400 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all"
               >
                 Cancel
               </button>
@@ -379,7 +379,7 @@ export default function TrainingPlanPage() {
           ) : (
             <button
               onClick={handleDelete}
-              className="bg-transparent text-red-400 border border-red-900/50 hover:border-red-400 rounded-lg px-3.5 py-2 text-xs font-semibold cursor-pointer transition-all"
+              className="bg-transparent text-red-400 border border-red-200 hover:border-red-400 rounded-lg px-3.5 py-2 text-xs font-semibold cursor-pointer transition-all"
             >
               Delete Plan
             </button>
@@ -388,13 +388,13 @@ export default function TrainingPlanPage() {
       </div>
 
       {/* Race countdown */}
-      <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-6 py-5 mb-6 flex justify-between items-center hover:border-neutral-700 transition-all">
+      <div className="bg-white border border-stone-200 rounded-xl px-6 py-5 mb-6 flex justify-between items-center hover:border-stone-300 transition-all">
         <div>
-          <span className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium">Race Day</span>
-          <div className="text-lg font-light text-neutral-100 tracking-tight mt-1">
+          <span className="text-stone-500 text-[0.7rem] uppercase tracking-wider font-medium">Race Day</span>
+          <div className="text-lg font-light text-stone-800 tracking-tight mt-1">
             {plan.race_name || `${plan.race_distance_km}km Ultra`}
           </div>
-          <div className="text-neutral-500 text-sm mt-0.5">
+          <div className="text-stone-500 text-sm mt-0.5">
             {new Date(plan.race_date + "T00:00:00").toLocaleDateString("sv-SE", {
               weekday: "long",
               year: "numeric",
@@ -404,25 +404,25 @@ export default function TrainingPlanPage() {
           </div>
         </div>
         <div className="flex flex-col items-center">
-          <div className="bg-neutral-800 text-neutral-100 text-4xl font-light tracking-tight px-5 py-3 rounded-xl">
+          <div className="bg-stone-100 text-stone-800 text-4xl font-light tracking-tight px-5 py-3 rounded-xl">
             {daysToRace}
           </div>
-          <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-medium mt-1.5">days to go</div>
+          <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-medium mt-1.5">days to go</div>
         </div>
       </div>
 
       {/* Current week card */}
       {currentWeek && (
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl overflow-hidden mb-6 hover:border-neutral-700 transition-all">
+        <div className="bg-white border border-stone-200 rounded-xl overflow-hidden mb-6 hover:border-stone-300 transition-all">
           {/* Header bar */}
           <div
             className="px-5 py-3.5 flex justify-between items-center"
             style={{ backgroundColor: `${PHASE_COLORS[currentWeek.phase]}15` }}
           >
-            <h2 className="text-base font-medium text-neutral-100 m-0">
+            <h2 className="text-base font-medium text-stone-800 m-0">
               Week {currentWeek.week_number} — {PHASE_LABELS[currentWeek.phase]}
             </h2>
-            <span className="text-neutral-400 text-xs font-medium">
+            <span className="text-stone-500 text-xs font-medium">
               {currentWeek.cycle_number ? `Cycle ${currentWeek.cycle_number}, W${currentWeek.week_in_cycle}` : ""} ·{" "}
               {weeksToRace} weeks to race
             </span>
@@ -448,32 +448,32 @@ export default function TrainingPlanPage() {
                 },
                 { label: "Long Run", value: currentWeek.long_run_km > 0 ? `${currentWeek.long_run_km} km` : "—" },
               ].map((s) => (
-                <div key={s.label} className="bg-neutral-800/30 rounded-lg p-3 border border-neutral-800">
-                  <div className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">
+                <div key={s.label} className="bg-stone-100/40 rounded-lg p-3 border border-stone-200">
+                  <div className="text-stone-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">
                     {s.label}
                   </div>
-                  <div className="text-xl font-light text-neutral-100 tracking-tight">{s.value}</div>
+                  <div className="text-xl font-light text-stone-800 tracking-tight">{s.value}</div>
                 </div>
               ))}
               {currentWeek.back_to_back && (
-                <div className="bg-neutral-800/30 rounded-lg p-3 border border-red-900/30">
-                  <div className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">
+                <div className="bg-stone-100/40 rounded-lg p-3 border border-red-200">
+                  <div className="text-stone-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">
                     Back-to-Back
                   </div>
-                  <div className="text-xl font-light text-neutral-100 tracking-tight">
+                  <div className="text-xl font-light text-stone-800 tracking-tight">
                     {Math.round(currentWeek.long_run_km * 0.65 * 10) / 10} km
                   </div>
-                  <div className="text-neutral-600 text-[0.65rem]">day 2 (Sat+Sun)</div>
+                  <div className="text-stone-400 text-[0.65rem]">day 2 (Sat+Sun)</div>
                 </div>
               )}
             </div>
             {/* Progress bar */}
-            <div className="mt-4 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+            <div className="mt-4 h-1.5 bg-stone-100 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${Math.min(100, (currentWeek.actualVolumeKm / currentWeek.target_volume_km) * 100)}%`,
-                  backgroundColor: currentWeek.actualVolumeKm >= currentWeek.target_volume_km ? "#d4d4d4" : "#a3a3a3",
+                  backgroundColor: currentWeek.actualVolumeKm >= currentWeek.target_volume_km ? "#4A7C59" : "#8A847B",
                 }}
               />
             </div>
@@ -490,17 +490,17 @@ export default function TrainingPlanPage() {
           { label: "B2B Weekends", value: String(b2bWeekCount) },
           { label: "Total Weeks", value: String(plan.total_weeks) },
         ].map((s) => (
-          <div key={s.label} className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-3.5">
-            <div className="text-neutral-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">{s.label}</div>
-            <div className="text-lg font-light text-neutral-100 tracking-tight">{s.value}</div>
+          <div key={s.label} className="bg-white border border-stone-200 rounded-xl p-3.5">
+            <div className="text-stone-500 text-[0.7rem] uppercase tracking-wider font-medium mb-1.5">{s.label}</div>
+            <div className="text-lg font-light text-stone-800 tracking-tight">{s.value}</div>
           </div>
         ))}
       </div>
 
       {/* Volume chart */}
       <div className="mb-6">
-        <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-neutral-500 mb-3">Volume Plan</h2>
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-all">
+        <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-stone-500 mb-3">Volume Plan</h2>
+        <div className="bg-white border border-stone-200 rounded-xl p-5 hover:border-stone-300 transition-all">
           {(() => {
             const sorted = [...weeks].sort((a, b) => a.week_number - b.week_number);
             const chartH = 200;
@@ -516,7 +516,7 @@ export default function TrainingPlanPage() {
                   {yLines.map((v) => (
                     <div
                       key={v}
-                      className="absolute right-0 text-neutral-600 text-[0.6rem] leading-none"
+                      className="absolute right-0 text-stone-400 text-[0.6rem] leading-none"
                       style={{ bottom: `${(v / yMax) * chartH + 20}px`, transform: "translateY(50%)" }}
                     >
                       {v}
@@ -530,7 +530,7 @@ export default function TrainingPlanPage() {
                     {yLines.map((v) => (
                       <div
                         key={v}
-                        className="absolute left-0 right-0 border-t border-neutral-800/40"
+                        className="absolute left-0 right-0 border-t border-stone-200/50"
                         style={{ bottom: `${(v / yMax) * chartH + 20}px` }}
                       />
                     ))}
@@ -562,7 +562,7 @@ export default function TrainingPlanPage() {
                             {/* NOW marker */}
                             {isCurrent && (
                               <div
-                                className="absolute text-[0.55rem] text-neutral-300 font-bold"
+                                className="absolute text-[0.55rem] text-stone-700 font-bold"
                                 style={{ top: w.back_to_back ? "-2px" : "0px" }}
                               >
                                 NOW
@@ -588,7 +588,7 @@ export default function TrainingPlanPage() {
                                   height: `${Math.max(actualH, 2)}px`,
                                   bottom: "20px",
                                   backgroundColor:
-                                    w.actualVolumeKm >= w.target_volume_km ? "#d4d4d4" : PHASE_COLORS[w.phase],
+                                    w.actualVolumeKm >= w.target_volume_km ? "#4A7C59" : PHASE_COLORS[w.phase],
                                   opacity: isCurrent ? 1 : 0.8,
                                 }}
                               />
@@ -609,7 +609,7 @@ export default function TrainingPlanPage() {
                               className="absolute text-[0.55rem] leading-none"
                               style={{
                                 bottom: "4px",
-                                color: isCurrent ? "#ededed" : "#525252",
+                                color: isCurrent ? "#2D2B28" : "#A39E95",
                                 fontWeight: isCurrent ? 700 : 400,
                               }}
                             >
@@ -625,24 +625,24 @@ export default function TrainingPlanPage() {
             );
           })()}
           {/* Legend */}
-          <div className="flex gap-4 mt-3 pt-3 border-t border-neutral-800 flex-wrap">
+          <div className="flex gap-4 mt-3 pt-3 border-t border-stone-200 flex-wrap">
             {Object.entries(PHASE_COLORS).map(([phase, color]) => (
               <div key={phase} className="flex items-center gap-1">
                 <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
-                <span className="text-neutral-500 text-[0.7rem]">{PHASE_LABELS[phase]}</span>
+                <span className="text-stone-500 text-[0.7rem]">{PHASE_LABELS[phase]}</span>
               </div>
             ))}
             <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-neutral-300" />
-              <span className="text-neutral-500 text-[0.7rem]">Target met</span>
+              <div className="w-2.5 h-2.5 rounded-sm bg-[#4A7C59]" />
+              <span className="text-stone-500 text-[0.7rem]">Target met</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-4 h-[1px] bg-neutral-500 opacity-50" />
-              <span className="text-neutral-500 text-[0.7rem]">Target line</span>
+              <div className="w-4 h-[1px] bg-stone-400 opacity-50" />
+              <span className="text-stone-500 text-[0.7rem]">Target line</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="text-red-400 text-[0.6rem] font-bold">B2B</span>
-              <span className="text-neutral-500 text-[0.7rem]">Back-to-back</span>
+              <span className="text-stone-500 text-[0.7rem]">Back-to-back</span>
             </div>
           </div>
         </div>
@@ -650,11 +650,11 @@ export default function TrainingPlanPage() {
 
       {/* Week-by-week table */}
       <div>
-        <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-neutral-500 mb-3">Week by Week</h2>
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-700 transition-all">
+        <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-stone-500 mb-3">Week by Week</h2>
+        <div className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-stone-300 transition-all">
           {/* Header */}
           <div
-            className="grid px-3.5 py-2.5 text-[0.65rem] font-medium uppercase tracking-wider text-neutral-600 border-b border-neutral-800"
+            className="grid px-3.5 py-2.5 text-[0.65rem] font-medium uppercase tracking-wider text-stone-400 border-b border-stone-200"
             style={{ gridTemplateColumns: "46px 110px 68px 65px 70px 65px 55px 55px 45px 1fr" }}
           >
             <span>Week</span>
@@ -679,35 +679,35 @@ export default function TrainingPlanPage() {
                 style={{
                   gridTemplateColumns: "46px 110px 68px 65px 70px 65px 55px 55px 45px 1fr",
                   backgroundColor: isCurrent
-                    ? "rgba(163,163,163,0.08)"
+                    ? "rgba(0,0,0,0.04)"
                     : i % 2 === 0
-                      ? "rgba(163,163,163,0.02)"
-                      : "rgba(163,163,163,0.04)",
-                  borderLeft: isCurrent ? "2px solid #a3a3a3" : "2px solid transparent",
-                  borderBottom: i < weeks.length - 1 ? "1px solid rgba(38,38,38,0.6)" : "none",
+                      ? "rgba(0,0,0,0.01)"
+                      : "rgba(0,0,0,0.02)",
+                  borderLeft: isCurrent ? "2px solid #6B6660" : "2px solid transparent",
+                  borderBottom: i < weeks.length - 1 ? "1px solid rgba(0,0,0,0.06)" : "none",
                   opacity: isPast && pct === 0 ? 0.5 : 1,
                 }}
               >
                 <span
                   className="text-xs"
                   style={{
-                    color: isCurrent ? "#ededed" : "#737373",
+                    color: isCurrent ? "#2D2B28" : "#8A847B",
                     fontWeight: isCurrent ? 600 : 400,
                   }}
                 >
                   {w.week_number}
                 </span>
-                <span className="text-neutral-500 text-[0.68rem]">{formatDateRange(w.start_date)}</span>
+                <span className="text-stone-500 text-[0.68rem]">{formatDateRange(w.start_date)}</span>
                 <span className="text-[0.72rem] font-medium" style={{ color: PHASE_COLORS[w.phase] }}>
                   {PHASE_LABELS[w.phase]}
                 </span>
-                <span className="text-neutral-200 text-xs" title={`Min: ${Math.ceil(w.target_volume_km * 0.9)} km`}>
+                <span className="text-stone-800 text-xs" title={`Min: ${Math.ceil(w.target_volume_km * 0.9)} km`}>
                   {w.target_volume_km} km
                 </span>
                 <span
                   className="text-xs"
                   style={{
-                    color: w.long_run_km > 0 ? "#a3a3a3" : "#525252",
+                    color: w.long_run_km > 0 ? "#6B6660" : "#A39E95",
                     fontWeight: w.long_run_km > 0 ? 500 : 400,
                   }}
                 >
@@ -716,34 +716,34 @@ export default function TrainingPlanPage() {
                 <span
                   className="text-xs font-medium"
                   style={{
-                    color: w.actualVolumeKm > 0 ? (pct >= 90 ? "#d4d4d4" : "#ededed") : "#525252",
+                    color: w.actualVolumeKm > 0 ? (pct >= 90 ? "#4A7C59" : "#2D2B28") : "#A39E95",
                   }}
                 >
                   {w.actualVolumeKm > 0 ? `${w.actualVolumeKm} km` : "—"}
                 </span>
-                <span className="text-neutral-500 text-[0.75rem]">{w.runCount > 0 ? w.runCount : "—"}</span>
-                <span className="text-neutral-500 text-[0.75rem]">{w.gymCount > 0 ? w.gymCount : "—"}</span>
+                <span className="text-stone-500 text-[0.75rem]">{w.runCount > 0 ? w.runCount : "—"}</span>
+                <span className="text-stone-500 text-[0.75rem]">{w.gymCount > 0 ? w.gymCount : "—"}</span>
                 <span
                   className="text-[0.7rem]"
                   style={{
-                    color: w.back_to_back ? COLORS.error : "#525252",
+                    color: w.back_to_back ? COLORS.error : "#A39E95",
                     fontWeight: w.back_to_back ? 700 : 400,
                   }}
                 >
                   {w.back_to_back ? "✓" : "—"}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <div className="flex-1 bg-neutral-800 rounded-sm h-1 overflow-hidden">
+                  <div className="flex-1 bg-stone-100 rounded-sm h-1 overflow-hidden">
                     <div
                       className="h-full rounded-sm"
                       style={{
                         width: `${Math.min(pct, 100)}%`,
-                        backgroundColor: pct >= 90 ? "#d4d4d4" : PHASE_COLORS[w.phase],
+                        backgroundColor: pct >= 90 ? "#4A7C59" : PHASE_COLORS[w.phase],
                       }}
                     />
                   </div>
                   {w.actualVolumeKm > 0 && (
-                    <span className="text-[0.7rem] min-w-[32px]" style={{ color: pct >= 90 ? "#d4d4d4" : "#737373" }}>
+                    <span className="text-[0.7rem] min-w-[32px]" style={{ color: pct >= 90 ? "#4A7C59" : "#8A847B" }}>
                       {Math.round(pct)}%
                     </span>
                   )}
@@ -755,27 +755,27 @@ export default function TrainingPlanPage() {
       </div>
 
       {/* Plan methodology note */}
-      <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-6 py-5 mt-6">
-        <h3 className="text-[0.7rem] uppercase tracking-wider font-medium text-neutral-500 mt-0 mb-3">Plan Details</h3>
-        <div className="text-neutral-500 text-sm leading-relaxed">
+      <div className="bg-white border border-stone-200 rounded-xl px-6 py-5 mt-6">
+        <h3 className="text-[0.7rem] uppercase tracking-wider font-medium text-stone-500 mt-0 mb-3">Plan Details</h3>
+        <div className="text-stone-500 text-sm leading-relaxed">
           <p className="mb-2">
-            <strong className="text-neutral-300">Conservative build:</strong> Graduated increase rate (12% at low
+            <strong className="text-stone-700">Conservative build:</strong> Graduated increase rate (12% at low
             volume, scaling to 6% at high volume), capped at +5km/week. Recovery every 4 weeks at 65%.
           </p>
           <p className="mb-2">
-            <strong className="text-neutral-300">Long run:</strong> Linear progression to {plan.peak_volume_km > 0 ? Math.min(35, Math.round(plan.peak_volume_km * 0.55)) : 35}km
+            <strong className="text-stone-700">Long run:</strong> Linear progression to {plan.peak_volume_km > 0 ? Math.min(35, Math.round(plan.peak_volume_km * 0.55)) : 35}km
             hard cap. B2B weekends simulate ultra distance without single-run injury risk.
           </p>
           <p className="mb-2">
-            <strong className="text-neutral-300">Back-to-back weekends:</strong> {b2bWeekCount} weekends with Saturday
+            <strong className="text-stone-700">Back-to-back weekends:</strong> {b2bWeekCount} weekends with Saturday
             long run + Sunday at 65%. Placed in peak phase before taper.
           </p>
           <p className="mb-2">
-            <strong className="text-neutral-300">Flexibility:</strong> All weekly targets have a 10% tolerance. Hit at
+            <strong className="text-stone-700">Flexibility:</strong> All weekly targets have a 10% tolerance. Hit at
             least 90% of target and the week counts as met.
           </p>
           <p className="m-0">
-            <strong className="text-neutral-300">Taper:</strong> 4 weeks at 70% → 55% → 35% → 20% of peak volume.
+            <strong className="text-stone-700">Taper:</strong> 4 weeks at 70% → 55% → 35% → 20% of peak volume.
           </p>
         </div>
       </div>

@@ -84,28 +84,28 @@ export function getDayOfWeek(): number {
 // ─── Colors ─────────────────────────────────────────────────────────────────
 
 export const COLORS = {
-  bg: "#0a0a0a",
-  cardBg: "rgba(163,163,163,0.08)",
-  cardAlt: "rgba(163,163,163,0.04)",
-  cardAccent: "#171717",
-  primaryNeutral: "#d4d4d4",
-  accentNeutral: "#a3a3a3",
-  warmNeutral: "#737373",
-  darkNeutral: "#525252",
-  textDark: "#ededed",
-  textMuted: "#a3a3a3",
-  textLight: "#737373",
-  border: "#262626",
-  success: "#a3a3a3",
-  warning: "#737373",
-  error: "#f87171",
+  bg: "#F7F3EE",
+  cardBg: "#ffffff",
+  cardAlt: "rgba(0,0,0,0.02)",
+  cardAccent: "#F0EDE7",
+  primaryNeutral: "#4A4743",
+  accentNeutral: "#6B6660",
+  warmNeutral: "#8A847B",
+  darkNeutral: "#A39E95",
+  textDark: "#2D2B28",
+  textMuted: "#6B6660",
+  textLight: "#8A847B",
+  border: "#E5DFD5",
+  success: "#16a34a",
+  warning: "#ca8a04",
+  error: "#dc2626",
 };
 
 export const PHASE_COLORS: Record<string, string> = {
-  build: "#d4d4d4",
-  recovery: "#737373",
-  taper: "#a3a3a3",
-  race: "#525252",
+  build: "#4A7C59",
+  recovery: "#C9A961",
+  taper: "#5C8A6F",
+  race: "#B8956A",
 };
 
 export const PHASE_LABELS: Record<string, string> = {

@@ -26,8 +26,8 @@ export default function Home() {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-[3px] border-neutral-700 border-t-[#fc4c02] rounded-full animate-spin" />
-          <p className="text-neutral-500 text-sm">
+          <div className="w-10 h-10 border-[3px] border-stone-200 border-t-[#fc4c02] rounded-full animate-spin" />
+          <p className="text-stone-500 text-sm">
             {redirecting ? "Redirecting to dashboard..." : "Checking session..."}
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function Home() {
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <main className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-4xl font-light text-neutral-100 tracking-tight mb-8">Strava Dashboard</h1>
+        <h1 className="text-4xl font-light text-stone-800 tracking-tight mb-8">Strava Dashboard</h1>
         <a
           href="/api/auth/login"
           className="bg-[#fc4c02] hover:bg-[#e04400] text-white rounded-lg px-8 py-3.5 text-lg font-semibold no-underline transition-colors"

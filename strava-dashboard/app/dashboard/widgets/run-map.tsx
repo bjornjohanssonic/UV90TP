@@ -134,13 +134,13 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
     });
     mapInstanceRef.current = map;
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: "abcd",
     }).addTo(map);
 
-    map.getPanes().tilePane.style.filter = "brightness(2.4)";
+    // No filter needed for light tiles
 
     // Add polyline using Leaflet's native SVG renderer
     const svgRenderer = L.svg({ padding: 1 });
@@ -313,20 +313,20 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
   const hasPolyline = !!act?.summary_polyline;
 
   return (
-    <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-700 transition-all h-full flex flex-col">
+    <div className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-stone-300 transition-all h-full flex flex-col">
       {/* Map / Gallery area */}
-      <div className="relative flex-1 min-h-[200px]">
+      <div className="relative flex-1 min-h-[400px]">
         {/* Map container — hidden when gallery is active */}
         <div ref={mapRef} className="absolute inset-0" style={{ visibility: showGallery ? "hidden" : "visible" }} />
 
         {/* Black loading overlay — covers the map until tiles are ready */}
         {hasPolyline && animationPhase === "loading" && (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-[#0a0a0a]"
+            className="absolute inset-0 flex items-center justify-center bg-[#F7F3EE]"
             style={{ zIndex: 1001, transition: "opacity 0.5s ease-out" }}
           >
             <svg width="48" height="48" viewBox="0 0 48 48" className="animate-spin-slow">
-              <circle cx="24" cy="24" r="20" fill="none" stroke="#262626" strokeWidth="3" />
+              <circle cx="24" cy="24" r="20" fill="none" stroke="#E5DFD5" strokeWidth="3" />
               <circle
                 cx="24"
                 cy="24"
@@ -345,14 +345,14 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
         {/* Fade-in overlay — briefly visible while transitioning from loading to drawing */}
         {hasPolyline && animationPhase === "drawing" && (
           <div
-            className="absolute inset-0 bg-[#0a0a0a] pointer-events-none animate-fade-out"
+            className="absolute inset-0 bg-[#F7F3EE] pointer-events-none animate-fade-out"
             style={{ zIndex: 1001 }}
           />
         )}
 
         {/* Gallery view */}
         {showGallery && photos.length > 0 && (
-          <div className="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center" style={{ zIndex: 1001 }}>
+          <div className="absolute inset-0 bg-[#1a1a1a] flex flex-col items-center justify-center" style={{ zIndex: 1001 }}>
             <img
               src={Object.values(photos[photoIndex].urls)[0]}
               alt={photos[photoIndex].caption || "Activity photo"}
@@ -363,14 +363,14 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
               <div className="flex items-center gap-3 py-2">
                 <button
                   onClick={() => setPhotoIndex((i) => (i - 1 + photos.length) % photos.length)}
-                  className="text-neutral-400 hover:text-neutral-200 bg-transparent border-none cursor-pointer text-sm px-2"
+                  className="text-stone-500 hover:text-stone-800 bg-transparent border-none cursor-pointer text-sm px-2"
                 >
                   &larr;
                 </button>
-                <span className="text-neutral-500 text-xs">{photoIndex + 1} / {photos.length}</span>
+                <span className="text-stone-500 text-xs">{photoIndex + 1} / {photos.length}</span>
                 <button
                   onClick={() => setPhotoIndex((i) => (i + 1) % photos.length)}
-                  className="text-neutral-400 hover:text-neutral-200 bg-transparent border-none cursor-pointer text-sm px-2"
+                  className="text-stone-500 hover:text-stone-800 bg-transparent border-none cursor-pointer text-sm px-2"
                 >
                   &rarr;
                 </button>
@@ -383,31 +383,31 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
         {animationPhase === "done" && photos.length > 0 && (
           <button
             onClick={() => setShowGallery((v) => !v)}
-            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-neutral-900/80 border border-neutral-700 hover:border-neutral-500 rounded-lg cursor-pointer transition-all"
+            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white/95 border border-stone-300 hover:border-stone-400 rounded-lg cursor-pointer transition-all"
             style={{ zIndex: 1002 }}
             title={showGallery ? "Show map" : "Show photos"}
           >
             {showGallery ? (
               /* Map icon */
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M1 3.5L5.5 1.5L10.5 3.5L15 1.5V12.5L10.5 14.5L5.5 12.5L1 14.5V3.5Z" stroke="#a3a3a3" strokeWidth="1.2" strokeLinejoin="round" />
-                <path d="M5.5 1.5V12.5" stroke="#a3a3a3" strokeWidth="1.2" />
-                <path d="M10.5 3.5V14.5" stroke="#a3a3a3" strokeWidth="1.2" />
+                <path d="M1 3.5L5.5 1.5L10.5 3.5L15 1.5V12.5L10.5 14.5L5.5 12.5L1 14.5V3.5Z" stroke="#6B6660" strokeWidth="1.2" strokeLinejoin="round" />
+                <path d="M5.5 1.5V12.5" stroke="#6B6660" strokeWidth="1.2" />
+                <path d="M10.5 3.5V14.5" stroke="#6B6660" strokeWidth="1.2" />
               </svg>
             ) : (
               /* Gallery icon */
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="#a3a3a3" strokeWidth="1.2" />
-                <circle cx="5" cy="6" r="1.5" stroke="#a3a3a3" strokeWidth="1" />
-                <path d="M1.5 11L5 8L8 10.5L11 7.5L14.5 11" stroke="#a3a3a3" strokeWidth="1.2" strokeLinejoin="round" />
+                <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="#6B6660" strokeWidth="1.2" />
+                <circle cx="5" cy="6" r="1.5" stroke="#6B6660" strokeWidth="1" />
+                <path d="M1.5 11L5 8L8 10.5L11 7.5L14.5 11" stroke="#6B6660" strokeWidth="1.2" strokeLinejoin="round" />
               </svg>
             )}
           </button>
         )}
 
         {!hasPolyline && (
-          <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/80" style={{ zIndex: 1001 }}>
-            <span className="text-neutral-600 text-sm">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/95" style={{ zIndex: 1001 }}>
+            <span className="text-stone-400 text-sm">
               {act ? "No route data for this activity" : "Select a run to see its route"}
             </span>
           </div>
@@ -416,10 +416,10 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
 
       {/* Run details */}
       {act && (
-        <div className="p-4 border-t border-neutral-800">
+        <div className="p-4 border-t border-stone-200">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-neutral-200 truncate">{act.name}</h3>
-            <span className="text-xs text-neutral-500 whitespace-nowrap ml-2">{formatDate(act.start_date)}</span>
+            <h3 className="text-sm font-medium text-stone-800 truncate">{act.name}</h3>
+            <span className="text-xs text-stone-500 whitespace-nowrap ml-2">{formatDate(act.start_date)}</span>
           </div>
           <div className="grid grid-cols-4 gap-3">
             {[
@@ -432,15 +432,15 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
               { label: "Clock", value: formatStartEnd(act.start_date, act.elapsed_time) },
             ].map((stat) => (
               <div key={stat.label}>
-                <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-medium mb-0.5">
+                <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-medium mb-0.5">
                   {stat.label}
                 </div>
-                <div className="text-sm text-neutral-200">{stat.value}</div>
+                <div className="text-sm text-stone-800">{stat.value}</div>
               </div>
             ))}
             {/* Quality score */}
             <div>
-              <div className="text-neutral-500 text-[0.65rem] uppercase tracking-wider font-medium mb-0.5">
+              <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-medium mb-0.5">
                 Quality
               </div>
               {qualityScore ? (
@@ -450,7 +450,7 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
                       qualityScore.total >= 80
                         ? "text-green-400"
                         : qualityScore.total >= 60
-                          ? "text-neutral-200"
+                          ? "text-stone-800"
                           : qualityScore.total >= 40
                             ? "text-yellow-400"
                             : "text-red-400"
@@ -465,14 +465,14 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
                       { label: "E", value: qualityScore.elevationHandling },
                       { label: "A", value: qualityScore.planAlignment },
                     ].map((s) => (
-                      <span key={s.label} className="text-[0.55rem] text-neutral-600" title={`${s.label}: ${s.value}/25`}>
+                      <span key={s.label} className="text-[0.55rem] text-stone-400" title={`${s.label}: ${s.value}/25`}>
                         {s.value}
                       </span>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="text-sm text-neutral-600">-</div>
+                <div className="text-sm text-stone-400">-</div>
               )}
             </div>
           </div>

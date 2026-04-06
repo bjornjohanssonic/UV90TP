@@ -6,9 +6,10 @@ export async function GET() {
     return NextResponse.json({ error: "STRAVA_CLIENT_ID not configured" }, { status: 500 });
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: "http://localhost:3000/api/auth/callback",
+    redirect_uri: `${baseUrl}/api/auth/callback`,
     response_type: "code",
     scope: "read_all,activity:read_all",
   });

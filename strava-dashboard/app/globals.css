@@ -2,41 +2,41 @@
 @source "../app/**/*.{ts,tsx}";
 @source "../lib/**/*.{ts,tsx}";
 
-/* ─── Ground Control Design Tokens ─── */
+/* ─── Warm Light Design Tokens ─── */
 :root {
-  --color-bg: #0a0a0a;
-  --color-card-bg: rgba(163, 163, 163, 0.08);
-  --color-card-border: #262626;
-  --color-card-hover-border: #404040;
-  --color-text-primary: #ededed;
-  --color-text-secondary: #a3a3a3;
-  --color-text-muted: #737373;
-  --color-text-whisper: #525252;
-  --color-border: #262626;
-  --color-border-hover: #525252;
-  --color-surface: #171717;
-  --color-error: #f87171;
+  --color-bg: #F7F3EE;
+  --color-card-bg: #ffffff;
+  --color-card-border: #E5DFD5;
+  --color-card-hover-border: #D4CCC0;
+  --color-text-primary: #2D2B28;
+  --color-text-secondary: #4A4743;
+  --color-text-muted: #6B6660;
+  --color-text-whisper: #8A847B;
+  --color-border: #E5DFD5;
+  --color-border-hover: #D4CCC0;
+  --color-surface: #F0EDE7;
+  --color-error: #dc2626;
 
   /* Health signal colors */
-  --color-zone-green: #4ade80;
-  --color-zone-green-muted: rgba(74, 222, 128, 0.15);
-  --color-zone-yellow: #fbbf24;
-  --color-zone-yellow-muted: rgba(251, 191, 36, 0.15);
-  --color-zone-red: #f87171;
-  --color-zone-red-muted: rgba(248, 113, 113, 0.15);
+  --color-zone-green: #16a34a;
+  --color-zone-green-muted: rgba(22, 163, 74, 0.1);
+  --color-zone-yellow: #ca8a04;
+  --color-zone-yellow-muted: rgba(202, 138, 4, 0.1);
+  --color-zone-red: #dc2626;
+  --color-zone-red-muted: rgba(220, 38, 38, 0.1);
 
   /* Readiness glow */
-  --glow-fresh: 0 0 80px rgba(74, 222, 128, 0.1);
-  --glow-ready: 0 0 60px rgba(163, 163, 163, 0.08);
-  --glow-moderate: 0 0 60px rgba(251, 191, 36, 0.08);
-  --glow-fatigued: 0 0 60px rgba(248, 113, 113, 0.06);
+  --glow-fresh: 0 0 80px rgba(22, 163, 74, 0.08);
+  --glow-ready: 0 0 60px rgba(0, 0, 0, 0.04);
+  --glow-moderate: 0 0 60px rgba(202, 138, 4, 0.06);
+  --glow-fatigued: 0 0 60px rgba(220, 38, 38, 0.04);
 }
 
 /* ─── Base Reset ─── */
 body {
   margin: 0;
-  background-color: #0a0a0a;
-  color: #ededed;
+  background-color: #F7F3EE;
+  color: #2D2B28;
 }
 
 /* ─── Leaflet / Tailwind conflict fix ─── */
@@ -58,10 +58,10 @@ body {
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 12px;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: #2D2B28;
+  border: 1px solid #4A4743;
   border-radius: 8px;
-  color: #a3a3a3;
+  color: #c4bfb6;
   font-size: 0.7rem;
   font-weight: 400;
   line-height: 1.5;
@@ -74,7 +74,7 @@ body {
   opacity: 0;
   transition: opacity 0.15s ease;
   z-index: 50;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 [data-tooltip]:hover::after {
@@ -89,7 +89,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: #333;
+  border-top-color: #4A4743;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease;

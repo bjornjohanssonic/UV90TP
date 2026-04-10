@@ -166,28 +166,27 @@ export async function POST() {
                 });
                 const summaryPolyline = detail.data.map?.summary_polyline || null;
                 const splitsJson = detail.data.splits_metric ? JSON.stringify(detail.data.splits_metric) : null;
-                if (summaryPolyline || splitsJson) {
-                  const existing = await getActivitySplits(strava_id);
-                  await upsertActivity({
-                    strava_id,
-                    name: detail.data.name,
-                    type: detail.data.type,
-                    distance: detail.data.distance,
-                    moving_time: detail.data.moving_time,
-                    elapsed_time: detail.data.elapsed_time,
-                    average_speed: detail.data.average_speed,
-                    max_speed: detail.data.max_speed,
-                    average_heartrate: detail.data.average_heartrate ?? null,
-                    max_heartrate: detail.data.max_heartrate ?? null,
-                    total_elevation_gain: detail.data.total_elevation_gain,
-                    start_date: detail.data.start_date,
-                    suffer_score: detail.data.suffer_score ?? null,
-                    splits: splitsJson || existing?.splits || null,
-                    summary_polyline: summaryPolyline || existing?.summary_polyline || null,
-                    athlete_id: athleteId,
-                  });
-                  backfilled++;
-                }
+                const existing = await getActivitySplits(strava_id);
+                await upsertActivity({
+                  strava_id,
+                  name: detail.data.name,
+                  type: detail.data.type,
+                  distance: detail.data.distance,
+                  moving_time: detail.data.moving_time,
+                  elapsed_time: detail.data.elapsed_time,
+                  average_speed: detail.data.average_speed,
+                  max_speed: detail.data.max_speed,
+                  average_heartrate: detail.data.average_heartrate ?? null,
+                  max_heartrate: detail.data.max_heartrate ?? null,
+                  total_elevation_gain: detail.data.total_elevation_gain,
+                  start_date: detail.data.start_date,
+                  suffer_score: detail.data.suffer_score ?? null,
+                  splits: splitsJson || existing?.splits || null,
+                  // Store "none" as sentinel so this activity is never retried
+                  summary_polyline: summaryPolyline || existing?.summary_polyline || "none",
+                  athlete_id: athleteId,
+                });
+                if (summaryPolyline) backfilled++;
                 send({ type: "status", message: `Backfilling routes: ${backfilled}/${missingPolylines.length} (${name})` });
               } catch (err) {
                 if (axios.isAxiosError(err) && err.response?.status === 429) {

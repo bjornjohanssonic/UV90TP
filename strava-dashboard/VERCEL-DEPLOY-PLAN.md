@@ -18,7 +18,7 @@
    - `TURSO_DB_URL` — ser ut som `libsql://din-db.turso.io`
    - `TURSO_TOKEN` — generera ett auth token via Turso-dashboarden
 
-### 2. Migrera befintlig data (valfritt)
+### ~~2. Migrera befintlig data~~ ✅ KLAR
 Om du vill ha med befintliga aktiviteter och plan i Turso:
 
 ```bash

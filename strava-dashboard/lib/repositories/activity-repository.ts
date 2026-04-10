@@ -22,7 +22,8 @@ export async function countActivitiesMissingPolyline(athleteId: string): Promise
     sql: `SELECT COUNT(*) as c FROM activities
           WHERE athlete_id = ?
             AND (summary_polyline IS NULL OR summary_polyline = '')
-            AND type IN ('Run', 'Walk', 'Ride', 'Hike', 'Swim')`,
+            AND type IN ('Run', 'Walk', 'Ride', 'Hike', 'Swim')
+            AND COALESCE(summary_polyline, '') != 'none'`,
     args: [athleteId],
   });
   return (result.rows[0] as unknown as { c: number }).c;
@@ -36,7 +37,8 @@ export async function getActivitiesMissingPolyline(
     sql: `SELECT strava_id, name FROM activities
           WHERE athlete_id = ?
             AND (summary_polyline IS NULL OR summary_polyline = '')
-            AND type IN ('Run', 'Walk', 'Ride', 'Hike', 'Swim')`,
+            AND type IN ('Run', 'Walk', 'Ride', 'Hike', 'Swim')
+            AND COALESCE(summary_polyline, '') != 'none'`,
     args: [athleteId],
   });
   return result.rows as unknown as { strava_id: string; name: string }[];

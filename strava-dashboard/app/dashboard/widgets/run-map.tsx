@@ -121,7 +121,7 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
       mapInstanceRef.current = null;
     }
 
-    if (!selectedActivity?.summary_polyline) return;
+    if (!selectedActivity?.summary_polyline || selectedActivity.summary_polyline === "none") return;
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const L = require("leaflet");
@@ -310,7 +310,7 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
   }, [leafletReady, selectedActivity, fetchPhotos]);
 
   const act = selectedActivity;
-  const hasPolyline = !!act?.summary_polyline;
+  const hasPolyline = !!act?.summary_polyline && act.summary_polyline !== "none";
 
   return (
     <div className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-stone-300 transition-all h-full flex flex-col">

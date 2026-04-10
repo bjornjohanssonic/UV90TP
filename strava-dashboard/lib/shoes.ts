@@ -34,22 +34,23 @@ export async function createShoe(name: string, type: ShoeType, athleteId: string
 export async function updateShoe(
   id: number,
   updates: { retired?: number; manual_km?: number },
+  athleteId: string,
 ): Promise<Shoe | null> {
   const db = await getDb();
   if (updates.retired !== undefined) {
-    await db.execute({ sql: `UPDATE shoes SET retired = ? WHERE id = ?`, args: [updates.retired, id] });
+    await db.execute({ sql: `UPDATE shoes SET retired = ? WHERE id = ? AND athlete_id = ?`, args: [updates.retired, id, athleteId] });
   }
   if (updates.manual_km !== undefined) {
-    await db.execute({ sql: `UPDATE shoes SET manual_km = ? WHERE id = ?`, args: [updates.manual_km, id] });
+    await db.execute({ sql: `UPDATE shoes SET manual_km = ? WHERE id = ? AND athlete_id = ?`, args: [updates.manual_km, id, athleteId] });
   }
-  const result = await db.execute({ sql: `SELECT * FROM shoes WHERE id = ?`, args: [id] });
+  const result = await db.execute({ sql: `SELECT * FROM shoes WHERE id = ? AND athlete_id = ?`, args: [id, athleteId] });
   return (result.rows[0] as unknown as Shoe) ?? null;
 }
 
-export async function assignShoeToActivity(stravaId: string, shoeId: number | null): Promise<void> {
+export async function assignShoeToActivity(stravaId: string, shoeId: number | null, athleteId: string): Promise<void> {
   const db = await getDb();
   await db.execute({
-    sql: `UPDATE activities SET shoe_id = ? WHERE strava_id = ?`,
-    args: [shoeId, stravaId],
+    sql: `UPDATE activities SET shoe_id = ? WHERE strava_id = ? AND athlete_id = ?`,
+    args: [shoeId, stravaId, athleteId],
   });
 }

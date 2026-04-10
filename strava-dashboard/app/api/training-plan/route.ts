@@ -76,6 +76,6 @@ export async function DELETE(request: NextRequest) {
   }
 
   const { id } = await request.json();
-  await deletePlan(id);
+  await deletePlan(id, athleteId);
   return NextResponse.json({ success: true });
 }

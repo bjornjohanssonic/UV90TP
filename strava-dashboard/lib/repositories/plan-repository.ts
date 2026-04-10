@@ -99,12 +99,15 @@ export async function createPlan(
   return { planId };
 }
 
-export async function deletePlan(planId: number): Promise<void> {
+export async function deletePlan(planId: number, athleteId: string): Promise<void> {
   const db = await getDb();
   await db.batch(
     [
-      { sql: "DELETE FROM training_weeks WHERE plan_id = ?", args: [planId] },
-      { sql: "DELETE FROM training_plans WHERE id = ?", args: [planId] },
+      {
+        sql: "DELETE FROM training_weeks WHERE plan_id = (SELECT id FROM training_plans WHERE id = ? AND athlete_id = ?)",
+        args: [planId, athleteId],
+      },
+      { sql: "DELETE FROM training_plans WHERE id = ? AND athlete_id = ?", args: [planId, athleteId] },
     ],
     "write",
   );

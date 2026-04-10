@@ -21,6 +21,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ st
     }
   }
 
-  await updateBattery(strava_id, battery_start ?? null, battery_end ?? null);
+  await updateBattery(strava_id, battery_start ?? null, battery_end ?? null, athleteId);
   return NextResponse.json({ ok: true });
 }

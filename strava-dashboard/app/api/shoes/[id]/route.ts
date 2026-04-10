@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     updates.manual_km = isNaN(km) ? 0 : Math.max(0, km);
   }
 
-  const shoe = await updateShoe(shoeId, updates);
+  const shoe = await updateShoe(shoeId, updates, athleteId);
   if (!shoe) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }

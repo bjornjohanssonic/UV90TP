@@ -57,11 +57,12 @@ export async function getMostRecentActivityDate(
 
 export async function getActivitySplits(
   stravaId: string,
+  athleteId: string,
 ): Promise<{ strava_id: string; splits: string | null; summary_polyline: string | null } | undefined> {
   const db = await getDb();
   const result = await db.execute({
-    sql: "SELECT strava_id, splits, summary_polyline FROM activities WHERE strava_id = ?",
-    args: [stravaId],
+    sql: "SELECT strava_id, splits, summary_polyline FROM activities WHERE strava_id = ? AND athlete_id = ?",
+    args: [stravaId, athleteId],
   });
   return result.rows[0] as unknown as
     | { strava_id: string; splits: string | null; summary_polyline: string | null }
@@ -72,11 +73,12 @@ export async function updateBattery(
   stravaId: string,
   batteryStart: number | null,
   batteryEnd: number | null,
+  athleteId: string,
 ): Promise<void> {
   const db = await getDb();
   await db.execute({
-    sql: "UPDATE activities SET battery_start = ?, battery_end = ? WHERE strava_id = ?",
-    args: [batteryStart, batteryEnd, stravaId],
+    sql: "UPDATE activities SET battery_start = ?, battery_end = ? WHERE strava_id = ? AND athlete_id = ?",
+    args: [batteryStart, batteryEnd, stravaId, athleteId],
   });
 }
 

@@ -35,6 +35,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ daily: [], contextual });
   }
 
-  const selection = await selectDailyTips(today, currentWeekKm, athleteId);
-  return NextResponse.json(selection);
+  const daily = await selectDailyTips(today, currentWeekKm, athleteId);
+  return NextResponse.json({ daily, contextual: [] });
 }

@@ -91,7 +91,7 @@ export async function POST() {
           });
 
           for (const act of activities) {
-            const existing = await getActivitySplits(String(act.id));
+            const existing = await getActivitySplits(String(act.id), athleteId);
 
             let splitsJson: string | null = null;
             let summaryPolyline: string | null = null;
@@ -166,7 +166,7 @@ export async function POST() {
                 });
                 const summaryPolyline = detail.data.map?.summary_polyline || null;
                 const splitsJson = detail.data.splits_metric ? JSON.stringify(detail.data.splits_metric) : null;
-                const existing = await getActivitySplits(strava_id);
+                const existing = await getActivitySplits(strava_id, athleteId);
                 await upsertActivity({
                   strava_id,
                   name: detail.data.name,

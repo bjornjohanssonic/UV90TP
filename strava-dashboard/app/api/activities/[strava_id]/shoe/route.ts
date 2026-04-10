@@ -12,6 +12,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ st
   const body = await req.json();
   const shoeId: number | null = body.shoe_id ?? null;
 
-  await assignShoeToActivity(strava_id, shoeId);
+  await assignShoeToActivity(strava_id, shoeId, athleteId);
   return NextResponse.json({ ok: true });
 }

@@ -12,11 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "better-sqlite3": "^12.8.0"
+    "@libsql/client": "^0.17.2",
+    "@modelcontextprotocol/sdk": "^1.29.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.6.0",
     "typescript": "^6.0.2"
   }

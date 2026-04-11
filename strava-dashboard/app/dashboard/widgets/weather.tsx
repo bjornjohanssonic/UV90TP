@@ -138,7 +138,7 @@ export function WeatherPanel() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {["Idag", "Imorgon"].map((t) => (
           <div
             key={t}
@@ -153,7 +153,7 @@ export function WeatherPanel() {
 
   if (error || !weather) {
     return (
-      <div className="grid gap-4 grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {["Idag", "Imorgon"].map((t) => (
           <div
             key={t}
@@ -167,7 +167,7 @@ export function WeatherPanel() {
   }
 
   return (
-    <div className="grid gap-4 grid-cols-2">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
       <WeatherCard
         title="Idag"
         hours={weather.today}

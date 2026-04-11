@@ -309,25 +309,26 @@ export default function ShoesPage() {
         ) : (
           <div>
             {/* Header */}
-            <div className="grid grid-cols-[2fr_100px_80px_80px_120px] px-5 py-2 border-b border-stone-100">
+            <div className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-2 border-b border-stone-100">
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Sko</span>
-              <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Typ</span>
-              <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Aktiviteter</span>
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Km</span>
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right"></span>
+              <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Typ</span>
+              <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Aktiviteter</span>
             </div>
             {activeShoes.map((shoe, idx) => (
               <div
                 key={shoe.id}
-                className="grid grid-cols-[2fr_100px_80px_80px_120px] px-5 py-3 items-center"
+                className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-3 items-center"
                 style={{
                   backgroundColor: idx % 2 === 0 ? "rgba(0,0,0,0.02)" : "transparent",
                   borderBottom: idx < activeShoes.length - 1 ? "1px solid rgba(0,0,0,0.05)" : "none",
                 }}
               >
-                <span className="text-sm text-stone-800 font-medium">{shoe.name}</span>
-                <span className="text-xs text-stone-500">{SHOE_TYPE_LABELS[shoe.type]}</span>
-                <span className="text-sm text-stone-700 text-right tabular-nums">{shoe.activity_count ?? 0}</span>
+                <div>
+                  <span className="text-sm text-stone-800 font-medium">{shoe.name}</span>
+                  <span className="sm:hidden text-xs text-stone-400 ml-2">{SHOE_TYPE_LABELS[shoe.type]}</span>
+                </div>
                 <EditableKm shoe={shoe} onSaved={loadShoes} />
                 <div className="text-right">
                   <button
@@ -338,6 +339,8 @@ export default function ShoesPage() {
                     {retiring === shoe.id ? "..." : "Hall of Fame"}
                   </button>
                 </div>
+                <span className="hidden sm:block text-xs text-stone-500">{SHOE_TYPE_LABELS[shoe.type]}</span>
+                <span className="hidden sm:block text-sm text-stone-700 text-right tabular-nums">{shoe.activity_count ?? 0}</span>
               </div>
             ))}
           </div>
@@ -352,27 +355,28 @@ export default function ShoesPage() {
             <span className="text-[0.6rem] text-stone-400">Pensionerade skor</span>
           </div>
           <div>
-            <div className="grid grid-cols-[2fr_100px_80px_80px_120px] px-5 py-2 border-b border-stone-100">
+            <div className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-2 border-b border-stone-100">
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Sko</span>
-              <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Typ</span>
-              <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Aktiviteter</span>
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Km</span>
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right"></span>
+              <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Typ</span>
+              <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Aktiviteter</span>
             </div>
             {retiredShoes.map((shoe, idx) => (
               <div
                 key={shoe.id}
-                className="grid grid-cols-[2fr_100px_80px_80px_120px] px-5 py-3 items-center opacity-60"
+                className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-3 items-center opacity-60"
                 style={{
                   backgroundColor: idx % 2 === 0 ? "rgba(0,0,0,0.02)" : "transparent",
                   borderBottom: idx < retiredShoes.length - 1 ? "1px solid rgba(0,0,0,0.05)" : "none",
                 }}
               >
-                <span className="text-sm text-stone-700 font-medium">{shoe.name}</span>
-                <span className="text-xs text-stone-500">{SHOE_TYPE_LABELS[shoe.type]}</span>
-                <span className="text-sm text-stone-600 text-right tabular-nums">{shoe.activity_count ?? 0}</span>
+                <div>
+                  <span className="text-sm text-stone-700 font-medium">{shoe.name}</span>
+                  <span className="sm:hidden text-xs text-stone-400 ml-2">{SHOE_TYPE_LABELS[shoe.type]}</span>
+                </div>
                 <span className="text-sm text-stone-600 text-right tabular-nums">
-                  {((shoe.total_km ?? 0)).toFixed(0)} km
+                  {(shoe.total_km ?? 0).toFixed(0)} km
                 </span>
                 <div className="text-right">
                   <button
@@ -383,6 +387,8 @@ export default function ShoesPage() {
                     {retiring === shoe.id ? "..." : "Återaktivera"}
                   </button>
                 </div>
+                <span className="hidden sm:block text-xs text-stone-500">{SHOE_TYPE_LABELS[shoe.type]}</span>
+                <span className="hidden sm:block text-sm text-stone-600 text-right tabular-nums">{shoe.activity_count ?? 0}</span>
               </div>
             ))}
           </div>

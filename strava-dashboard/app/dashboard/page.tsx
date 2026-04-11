@@ -139,7 +139,7 @@ export default function Dashboard() {
             href="/training-plan"
             className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
           >
-            Training Plan
+            Plan
           </a>
           <a
             href="/shoes"

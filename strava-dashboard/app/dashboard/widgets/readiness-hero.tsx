@@ -55,7 +55,7 @@ export function ReadinessHero({ readiness }: { readiness: ReadinessResult | null
 
   return (
     <div
-      className={`relative bg-white border border-stone-200 rounded-xl p-8 transition-all duration-700 ${visible ? "opacity-100" : "opacity-0"}`}
+      className={`relative bg-white border border-stone-200 rounded-xl p-5 sm:p-8 transition-all duration-700 ${visible ? "opacity-100" : "opacity-0"}`}
       style={{ boxShadow: style.glow }}
     >
       {/* Hero number */}
@@ -75,7 +75,7 @@ export function ReadinessHero({ readiness }: { readiness: ReadinessResult | null
       </div>
 
       {/* Factor breakdown */}
-      <div className="mt-6 grid grid-cols-4 gap-3">
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {Object.entries(readiness.factors).map(([key, value], i) => {
           const config = FACTOR_LABELS[key];
           if (!config) return null;

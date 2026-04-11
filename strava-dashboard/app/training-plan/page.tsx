@@ -429,12 +429,7 @@ export default function TrainingPlanPage() {
           </div>
 
           <div className="p-5">
-            <div
-              className="grid gap-3"
-              style={{
-                gridTemplateColumns: currentWeek.back_to_back ? "repeat(5, 1fr)" : "repeat(4, 1fr)",
-              }}
-            >
+            <div className={`grid gap-3 grid-cols-2 ${currentWeek.back_to_back ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
               {[
                 { label: "Target", value: `${currentWeek.target_volume_km} km` },
                 {
@@ -482,7 +477,7 @@ export default function TrainingPlanPage() {
       )}
 
       {/* Plan stats */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-6">
         {[
           { label: "Start Volume", value: `${plan.starting_volume_km} km` },
           { label: "Peak Volume", value: `${plan.peak_volume_km} km` },
@@ -653,20 +648,17 @@ export default function TrainingPlanPage() {
         <h2 className="text-[0.7rem] uppercase tracking-wider font-medium text-stone-500 mb-3">Week by Week</h2>
         <div className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-stone-300 transition-all">
           {/* Header */}
-          <div
-            className="grid px-3.5 py-2.5 text-[0.65rem] font-medium uppercase tracking-wider text-stone-400 border-b border-stone-200"
-            style={{ gridTemplateColumns: "46px 110px 68px 65px 70px 65px 55px 55px 45px 1fr" }}
-          >
-            <span>Week</span>
+          <div className="grid px-3.5 py-2.5 text-[0.65rem] font-medium uppercase tracking-wider text-stone-400 border-b border-stone-200 grid-cols-[40px_1fr_58px_58px_58px_1fr] sm:grid-cols-[46px_110px_68px_65px_70px_65px_55px_55px_45px_1fr]">
+            <span>W</span>
             <span>Dates</span>
             <span>Phase</span>
             <span>Target</span>
-            <span>Long Run</span>
             <span>Actual</span>
-            <span>Runs</span>
-            <span>Gym</span>
-            <span>B2B</span>
             <span>Progress</span>
+            <span className="hidden sm:block">Long Run</span>
+            <span className="hidden sm:block">Runs</span>
+            <span className="hidden sm:block">Gym</span>
+            <span className="hidden sm:block">B2B</span>
           </div>
           {weeks.map((w, i) => {
             const pct = w.target_volume_km > 0 ? (w.actualVolumeKm / w.target_volume_km) * 100 : 0;
@@ -675,9 +667,8 @@ export default function TrainingPlanPage() {
             return (
               <div
                 key={w.week_number}
-                className="grid items-center px-3.5 py-2.5"
+                className="grid items-center px-3.5 py-2.5 grid-cols-[40px_1fr_58px_58px_58px_1fr] sm:grid-cols-[46px_110px_68px_65px_70px_65px_55px_55px_45px_1fr]"
                 style={{
-                  gridTemplateColumns: "46px 110px 68px 65px 70px 65px 55px 55px 45px 1fr",
                   backgroundColor: isCurrent
                     ? "rgba(0,0,0,0.04)"
                     : i % 2 === 0
@@ -705,32 +696,12 @@ export default function TrainingPlanPage() {
                   {w.target_volume_km} km
                 </span>
                 <span
-                  className="text-xs"
-                  style={{
-                    color: w.long_run_km > 0 ? "#6B6660" : "#A39E95",
-                    fontWeight: w.long_run_km > 0 ? 500 : 400,
-                  }}
-                >
-                  {w.long_run_km > 0 ? `${w.long_run_km} km` : "—"}
-                </span>
-                <span
                   className="text-xs font-medium"
                   style={{
                     color: w.actualVolumeKm > 0 ? (pct >= 90 ? "#4A7C59" : "#2D2B28") : "#A39E95",
                   }}
                 >
                   {w.actualVolumeKm > 0 ? `${w.actualVolumeKm} km` : "—"}
-                </span>
-                <span className="text-stone-500 text-[0.75rem]">{w.runCount > 0 ? w.runCount : "—"}</span>
-                <span className="text-stone-500 text-[0.75rem]">{w.gymCount > 0 ? w.gymCount : "—"}</span>
-                <span
-                  className="text-[0.7rem]"
-                  style={{
-                    color: w.back_to_back ? COLORS.error : "#A39E95",
-                    fontWeight: w.back_to_back ? 700 : 400,
-                  }}
-                >
-                  {w.back_to_back ? "✓" : "—"}
                 </span>
                 <div className="flex items-center gap-1.5">
                   <div className="flex-1 bg-stone-100 rounded-sm h-1 overflow-hidden">
@@ -743,11 +714,32 @@ export default function TrainingPlanPage() {
                     />
                   </div>
                   {w.actualVolumeKm > 0 && (
-                    <span className="text-[0.7rem] min-w-[32px]" style={{ color: pct >= 90 ? "#4A7C59" : "#8A847B" }}>
+                    <span className="text-[0.7rem] min-w-[28px]" style={{ color: pct >= 90 ? "#4A7C59" : "#8A847B" }}>
                       {Math.round(pct)}%
                     </span>
                   )}
                 </div>
+                {/* Desktop-only columns */}
+                <span
+                  className="hidden sm:block text-xs"
+                  style={{
+                    color: w.long_run_km > 0 ? "#6B6660" : "#A39E95",
+                    fontWeight: w.long_run_km > 0 ? 500 : 400,
+                  }}
+                >
+                  {w.long_run_km > 0 ? `${w.long_run_km} km` : "—"}
+                </span>
+                <span className="hidden sm:block text-stone-500 text-[0.75rem]">{w.runCount > 0 ? w.runCount : "—"}</span>
+                <span className="hidden sm:block text-stone-500 text-[0.75rem]">{w.gymCount > 0 ? w.gymCount : "—"}</span>
+                <span
+                  className="hidden sm:block text-[0.7rem]"
+                  style={{
+                    color: w.back_to_back ? COLORS.error : "#A39E95",
+                    fontWeight: w.back_to_back ? 700 : 400,
+                  }}
+                >
+                  {w.back_to_back ? "✓" : "—"}
+                </span>
               </div>
             );
           })}

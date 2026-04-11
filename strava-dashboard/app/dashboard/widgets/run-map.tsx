@@ -422,7 +422,7 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
             <h3 className="text-sm font-medium text-stone-800 truncate">{act.name}</h3>
             <span className="text-xs text-stone-500 whitespace-nowrap ml-2">{formatDate(act.start_date)}</span>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: "Distance", value: `${formatKm(act.distance)} km` },
               { label: "Time", value: formatTime(act.moving_time) },

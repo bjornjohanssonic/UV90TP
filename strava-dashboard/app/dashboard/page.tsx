@@ -15,6 +15,7 @@ import { WeatherPanel } from "./widgets/weather";
 import { TipPanel } from "./widgets/tip-panel";
 import { PlanAdherenceCard } from "./widgets/plan-adherence";
 import { StreakTracker } from "./widgets/streak-tracker";
+import BatteryStatsPanel from "./widgets/battery-stats-panel";
 import { useActivities, useTrainingPlan, useSyncStream, useDashboardData } from "./hooks";
 import { useCoach } from "./hooks/use-coach";
 import { useTips } from "./hooks/use-tips";
@@ -113,7 +114,7 @@ export default function Dashboard() {
   const effectiveWeekStart = selectedWeekStart || (weeks.length > 0 ? weeks[0].weekStart : null);
 
   return (
-    <main className="max-w-[1400px] mx-auto p-8 min-h-screen">
+    <main className="max-w-[1400px] mx-auto p-4 sm:p-8 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-2.5">
         <div className="flex items-center gap-4">
@@ -128,6 +129,12 @@ export default function Dashboard() {
           )}
         </div>
         <div className="flex gap-2.5 items-center">
+          <a
+            href="/morning"
+            className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
+          >
+            Morning
+          </a>
           <a
             href="/training-plan"
             className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
@@ -187,7 +194,7 @@ export default function Dashboard() {
           <WeatherPanel />
 
           {/* ACWR + This Week */}
-          <div className="grid gap-4" style={{ gridTemplateColumns: "2fr 3fr" }}>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-[2fr_3fr]">
             <ACWRGauge acwr={coachData?.acwr ?? null} />
             {currentWeek && (
               <ThisWeek
@@ -222,7 +229,7 @@ export default function Dashboard() {
 
           {/* Plan Adherence + Streak Tracker */}
           {(adherence || streaks) && (
-            <div className="grid gap-4 grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <PlanAdherenceCard adherence={adherence} />
               <StreakTracker streaks={streaks} />
             </div>
@@ -232,6 +239,9 @@ export default function Dashboard() {
           <div className="bg-white border border-stone-200 rounded-xl p-5 hover:border-stone-300 transition-all">
             <RecentRuns runs={runs} shoes={shoes} onBatteryUpdate={handleBatteryUpdate} />
           </div>
+
+          {/* GPS Battery Stats */}
+          <BatteryStatsPanel runs={runs} />
 
           <p className="text-stone-400 text-xs text-center px-3 py-3 bg-white/40 rounded-lg">
             {activities.length} activities cached &middot; {runs.length} runs

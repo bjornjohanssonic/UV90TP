@@ -1,0 +1,44 @@
+{
+  "name": "Ground Control",
+  "short_name": "Ground Control",
+  "description": "Personal running dashboard with coach intelligence",
+  "start_url": "/morning",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F3EE",
+  "theme_color": "#2D2B28",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "Full training dashboard"
+    },
+    {
+      "name": "Training Plan",
+      "url": "/training-plan",
+      "description": "Weekly training plan"
+    }
+  ],
+  "categories": ["health", "fitness", "sports"]
+}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import type { Shoe, ShoeType } from "@/types";
+import type { Activity, Shoe, ShoeType } from "@/types";
+import { getShoeAlerts, getRotationWarning, getShoePredictions } from "@/lib/shoe-intelligence";
 
 const SHOE_TYPE_LABELS: Record<ShoeType, string> = {
   road: "Road",
@@ -80,6 +81,7 @@ function EditableKm({ shoe, onSaved }: { shoe: Shoe; onSaved: () => void }) {
 
 export default function ShoesPage() {
   const [shoes, setShoes] = useState<Shoe[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [addName, setAddName] = useState("");
   const [addType, setAddType] = useState<ShoeType>("road");
@@ -96,6 +98,10 @@ export default function ShoesPage() {
 
   useEffect(() => {
     loadShoes();
+    fetch("/api/activities")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setActivities)
+      .catch(() => {});
   }, []);
 
   async function handleAdd(e: React.FormEvent) {
@@ -166,6 +172,67 @@ export default function ShoesPage() {
           ← Dashboard
         </a>
       </div>
+
+      {/* Intelligence panel */}
+      {shoes.length > 0 && (() => {
+        const alerts = getShoeAlerts(shoes);
+        const rotation = getRotationWarning(shoes, activities);
+        const predictions = getShoePredictions(shoes, activities);
+        const hasInsights = alerts.length > 0 || rotation || predictions.length > 0;
+        if (!hasInsights) return null;
+        return (
+          <div className="mb-6 flex flex-col gap-2">
+            {alerts.map((a) => (
+              <div
+                key={a.shoeId}
+                className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${
+                  a.level === "critical"
+                    ? "bg-red-50 border-red-200 text-red-700"
+                    : "bg-yellow-50 border-yellow-200 text-yellow-700"
+                }`}
+              >
+                <span className="font-medium shrink-0">{a.shoeName}</span>
+                <span>{a.message}</span>
+              </div>
+            ))}
+            {rotation && (
+              <div className="flex items-start gap-3 px-4 py-3 rounded-xl border bg-blue-50 border-blue-200 text-blue-700 text-sm">
+                <span className="font-medium shrink-0">Rotation</span>
+                <span>
+                  {rotation.shoeName} used in {rotation.runsInWindow}/{rotation.windowRuns} runs last 14 days ({Math.round(rotation.pct * 100)}%). Give it a rest.
+                </span>
+              </div>
+            )}
+            {predictions.length > 0 && (
+              <div className="bg-white border border-stone-200 rounded-xl px-4 py-3">
+                <div className="text-[0.65rem] uppercase tracking-wider font-medium text-stone-400 mb-2">Livslängdsprognos</div>
+                <div className="flex flex-col gap-1.5">
+                  {predictions.map((p) => (
+                    <div key={p.shoeId} className="flex items-center gap-3">
+                      <span className="text-sm text-stone-700 font-medium w-40 truncate">{p.shoeName}</span>
+                      <div className="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.min((p.currentKm / 700) * 100, 100)}%`,
+                            backgroundColor: p.currentKm >= 700 ? "#f87171" : p.currentKm >= 600 ? "#fbbf24" : "#4ade80",
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs text-stone-500 whitespace-nowrap w-40 text-right">
+                        {p.weeksToLimit === null
+                          ? "Gränsen passerad"
+                          : `~${p.weeksToLimit} veckor kvar`}
+                        {" "}· {p.weeklyKmRate.toFixed(1)} km/v
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Active shoes */}
       <div className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-stone-300 transition-all mb-6">

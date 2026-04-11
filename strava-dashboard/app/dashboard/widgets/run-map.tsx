@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import type { Activity } from "@/types";
 import type { RunQualityScore } from "@/types/coach";
 import { formatKm, formatTime, formatPace, formatDate, formatStartEnd } from "@/lib/dashboard-helpers";
+import { computeHRZones, zoneBreakdown, formatZoneTime } from "@/lib/zones";
 
 interface RunMapProps {
   selectedActivity: Activity | null;
@@ -476,6 +477,43 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
               )}
             </div>
           </div>
+
+          {/* HR Zone distribution */}
+          {(() => {
+            const zones = computeHRZones(act.splits, act.average_heartrate);
+            if (!zones) return null;
+            const breakdown = zoneBreakdown(zones);
+            return (
+              <div className="mt-3 pt-3 border-t border-stone-100">
+                <div className="text-stone-500 text-[0.65rem] uppercase tracking-wider font-medium mb-1.5">
+                  HR Zones <span className="normal-case text-stone-400 font-normal">(est. max {Math.round(zones.maxHRUsed)} bpm)</span>
+                </div>
+                <div className="flex rounded overflow-hidden h-3 gap-px">
+                  {breakdown.map((z) =>
+                    z.pct > 0 ? (
+                      <div
+                        key={z.zone}
+                        style={{ width: `${z.pct}%`, backgroundColor: z.color, opacity: 0.8 }}
+                        title={`${z.label}: ${z.pct.toFixed(0)}% · ${formatZoneTime(z.seconds)}`}
+                      />
+                    ) : null,
+                  )}
+                </div>
+                <div className="flex gap-3 mt-1.5">
+                  {breakdown.map((z) =>
+                    z.pct > 1 ? (
+                      <div key={z.zone} className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: z.color, opacity: 0.8 }} />
+                        <span className="text-[0.6rem] text-stone-500">
+                          {z.label} {z.pct.toFixed(0)}%
+                        </span>
+                      </div>
+                    ) : null,
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

@@ -460,17 +460,17 @@ export default function RecentRuns({ runs, shoes, onBatteryUpdate }: RecentRunsP
         />
       ) : (
         <div className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-stone-300 transition-all">
-          <div className="grid grid-cols-[1fr_1.5fr_70px_65px_65px_50px_50px_40px_70px_90px] px-4 py-2 border-b border-stone-200">
+          <div className="grid grid-cols-[1fr_1.5fr_65px_65px] sm:grid-cols-[1fr_1.5fr_70px_65px_65px_50px_50px_40px_70px_90px] px-4 py-2 border-b border-stone-200">
             <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Date</span>
             <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Name</span>
-            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Distance</span>
-            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Time</span>
+            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Dist</span>
             <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Pace</span>
-            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">HR</span>
-            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Effort</span>
-            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Q</span>
-            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Battery</span>
-            <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Shoes</span>
+            <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Time</span>
+            <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">HR</span>
+            <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Effort</span>
+            <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Q</span>
+            <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Battery</span>
+            <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Shoes</span>
           </div>
           {tableRuns.map((act, idx) => {
             const quality = scores.get(act.strava_id);
@@ -478,7 +478,7 @@ export default function RecentRuns({ runs, shoes, onBatteryUpdate }: RecentRunsP
             return (
               <div
                 key={act.strava_id}
-                className="grid grid-cols-[1fr_1.5fr_70px_65px_65px_50px_50px_40px_70px_90px] px-4 py-2 items-center"
+                className="grid grid-cols-[1fr_1.5fr_65px_65px] sm:grid-cols-[1fr_1.5fr_70px_65px_65px_50px_50px_40px_70px_90px] px-4 py-2 items-center"
                 style={{
                   backgroundColor: idx % 2 === 0 ? "rgba(0,0,0,0.02)" : "rgba(0,0,0,0.01)",
                   borderBottom: idx < 19 ? "1px solid rgba(0,0,0,0.06)" : "none",
@@ -487,18 +487,18 @@ export default function RecentRuns({ runs, shoes, onBatteryUpdate }: RecentRunsP
                 <span className="text-xs text-stone-500">{formatDate(act.start_date)}</span>
                 <span className="text-xs text-stone-700 truncate">{act.name}</span>
                 <span className="text-xs text-stone-800 text-right">{formatKm(act.distance)} km</span>
-                <span className="text-xs text-stone-500 text-right">{formatTime(act.moving_time)}</span>
                 <span className="text-xs text-stone-500 text-right">{formatPace(act.distance, act.moving_time)} /km</span>
-                <span className={`text-xs text-right ${act.average_heartrate ? "text-stone-500" : "text-stone-300"}`}>
+                <span className="hidden sm:block text-xs text-stone-500 text-right">{formatTime(act.moving_time)}</span>
+                <span className={`hidden sm:block text-xs text-right ${act.average_heartrate ? "text-stone-500" : "text-stone-300"}`}>
                   {act.average_heartrate ? Math.round(act.average_heartrate) : "\u2014"}
                 </span>
-                <span className={`text-xs text-right ${act.suffer_score ? "text-stone-500" : "text-stone-300"}`}>
+                <span className={`hidden sm:block text-xs text-right ${act.suffer_score ? "text-stone-500" : "text-stone-300"}`}>
                   {act.suffer_score ? Math.round(act.suffer_score) : "\u2014"}
                 </span>
-                <div className="text-right">
+                <div className="hidden sm:block text-right">
                   {quality ? <QualityBadge score={quality.total} /> : <span className="text-xs text-stone-300">{"\u2014"}</span>}
                 </div>
-                <div className="text-right">
+                <div className="hidden sm:block text-right">
                   <EditableBatteryCell
                     stravaId={act.strava_id}
                     batteryStart={act.battery_start}
@@ -506,7 +506,7 @@ export default function RecentRuns({ runs, shoes, onBatteryUpdate }: RecentRunsP
                     onSaved={onBatteryUpdate}
                   />
                 </div>
-                <div className="text-right">
+                <div className="hidden sm:block text-right">
                   {shoe ? (
                     <span className="text-xs text-stone-500 truncate block" title={shoe.name}>
                       {shoe.name} <span className="text-stone-400">{SHOE_TYPE_SHORT[shoe.type] ?? shoe.type}</span>

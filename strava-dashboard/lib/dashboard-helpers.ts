@@ -71,11 +71,6 @@ export function formatBattery(start: number | null, end: number | null): string 
   return `\u2192 ${end}%`;
 }
 
-export function batteryDrain(start: number | null, end: number | null): number | null {
-  if (start == null || end == null) return null;
-  return start - end;
-}
-
 export function getDayOfWeek(): number {
   const d = new Date().getDay();
   return d === 0 ? 7 : d;

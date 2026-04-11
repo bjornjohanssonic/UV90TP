@@ -142,7 +142,7 @@ export default function WeekDetail({ activities, selectedWeekStart, selectedActi
                         <span className={`truncate flex-1 min-w-0 ${isSelected ? "text-stone-800" : "text-stone-700"}`}>
                           {act.name}
                         </span>
-                        <span className="text-stone-400 text-[0.6rem] whitespace-nowrap">{formatTimeOfDay(act.start_date)}</span>
+                        <span className="hidden sm:inline text-stone-400 text-[0.6rem] whitespace-nowrap">{formatTimeOfDay(act.start_date)}</span>
                         {act.distance > 0 && (
                           <span className="text-stone-500 whitespace-nowrap">{formatKm(act.distance)} km</span>
                         )}
@@ -158,7 +158,7 @@ export default function WeekDetail({ activities, selectedWeekStart, selectedActi
                           </span>
                         )}
                         {act.suffer_score && (
-                          <span className="text-stone-400 whitespace-nowrap text-[0.6rem]">
+                          <span className="hidden sm:inline text-stone-400 whitespace-nowrap text-[0.6rem]">
                             {Math.round(act.suffer_score)} effort
                           </span>
                         )}

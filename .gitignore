@@ -1,0 +1,17 @@
+# ── strava-dashboard ──────────────────────────────────────────────────────────
+strava-dashboard/.next/
+strava-dashboard/node_modules/
+strava-dashboard/strava.db
+strava-dashboard/strava.db-shm
+strava-dashboard/strava.db-wal
+strava-dashboard/strava_dump.sql
+strava-dashboard/.env.local
+strava-dashboard/tsconfig.tsbuildinfo
+
+# ── strava-mcp ────────────────────────────────────────────────────────────────
+strava-mcp/node_modules/
+strava-mcp/dist/
+
+# ── misc ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

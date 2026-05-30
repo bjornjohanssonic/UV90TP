@@ -6,21 +6,9 @@ import { Activity, TrendingUp, MessageSquare } from "lucide-react";
 import DashboardPreview from "./dashboard-preview";
 
 const features = [
-  {
-    icon: Activity,
-    title: "Readiness",
-    description: "Daglig poäng 0–100",
-  },
-  {
-    icon: TrendingUp,
-    title: "Belastning",
-    description: "ACWR-spårning",
-  },
-  {
-    icon: MessageSquare,
-    title: "Coaching",
-    description: "AI-coach-direktiv",
-  },
+  { icon: Activity,       title: "Readiness",  description: "Score 0–100"    },
+  { icon: TrendingUp,     title: "Belastning", description: "ACWR"            },
+  { icon: MessageSquare,  title: "Coaching",   description: "AI-direktiv"     },
 ];
 
 export default function Home() {
@@ -37,9 +25,7 @@ export default function Home() {
           setChecking(false);
         }
       })
-      .catch(() => {
-        setChecking(false);
-      });
+      .catch(() => setChecking(false));
   }, []);
 
   if (checking || redirecting) {
@@ -56,73 +42,105 @@ export default function Home() {
   }
 
   return (
-    <main className="relative flex flex-col items-center justify-center min-h-screen px-4 overflow-hidden">
-      {/* Preview of the real dashboard, blurred + dimmed behind the login card */}
+    <main className="relative min-h-screen overflow-hidden bg-[#F7F3EE]">
+      {/* Blurred dashboard preview — full screen backdrop */}
       <motion.div
         aria-hidden
-        initial={{ opacity: 0, scale: 1.04 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 1.2, ease: "easeOut" }}
-        className="pointer-events-none absolute inset-0 z-0 blur-[3px]"
+        className="pointer-events-none absolute inset-0 z-0 blur-[2px] scale-[1.02]"
       >
         <DashboardPreview />
       </motion.div>
 
-      {/* Cream wash so the preview reads as a backdrop and the card stays legible */}
+      {/*
+        Mobile: gradient is almost transparent at top (preview shows through)
+                then fades to solid cream at ~55% so login area is legible.
+        Desktop: lighter uniform cream wash — the floating card provides contrast.
+      */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
+        className="pointer-events-none absolute inset-0 z-[1] sm:hidden"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(247,243,238,0.92) 0%, rgba(247,243,238,0.78) 45%, rgba(247,243,238,0.62) 100%)",
+            "linear-gradient(to bottom, rgba(247,243,238,0.08) 0%, rgba(247,243,238,0.08) 28%, rgba(247,243,238,0.88) 52%, #F7F3EE 64%)",
         }}
       />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[1] hidden sm:block"
+        style={{ background: "rgba(247,243,238,0.55)" }}
+      />
 
-      {/* Login card — floats above the app preview */}
+      {/* ── Mobile layout ─────────────────────────────────────────────────── */}
+      {/* Spacer: pushes login content below the visible preview zone */}
+      <div className="h-[40vh] sm:hidden" />
+
       <motion.div
-        initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-        className="relative z-10 flex flex-col items-center text-center max-w-md w-full bg-white/85 backdrop-blur-md border border-stone-200 rounded-2xl shadow-xl shadow-stone-300/30 px-8 py-10"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut", delay: 0.25 }}
+        className="relative z-[2] flex flex-col items-center text-center px-6 pb-12 sm:hidden"
       >
-        <span className="text-xs uppercase tracking-widest text-stone-400 bg-white border border-stone-200 rounded-full px-3 py-1 mb-8">
-          Strava-driven
-        </span>
-
-        <h1 className="text-5xl font-light text-stone-800 tracking-tight mb-3">
-          Ground Control
-        </h1>
-        <p className="text-lg text-stone-400 font-light mb-10">
-          Din personliga löparcoach
-        </p>
-
-        <div className="grid grid-cols-3 gap-3 w-full mb-10">
-          {features.map(({ icon: Icon, title, description }, i) => (
-            <motion.div
-              key={title}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: 0.5 + i * 0.1 }}
-              className="bg-white border border-stone-200 rounded-xl p-4 flex flex-col items-center gap-2"
-            >
-              <Icon size={18} className="text-stone-400" />
-              <span className="text-xs font-medium text-stone-700">{title}</span>
-              <span className="text-[0.65rem] text-stone-400 leading-tight">{description}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        <a
-          href="/api/auth/login"
-          className="bg-[#fc4c02] hover:bg-[#e04400] text-white rounded-lg px-8 py-3.5 text-base font-semibold no-underline transition-colors w-full text-center"
-        >
-          Connect with Strava
-        </a>
-
-        <p className="mt-6 text-xs text-stone-300">
-          Powered by Strava
-        </p>
+        <LoginContent features={features} />
       </motion.div>
+
+      {/* ── Desktop layout — floating card ────────────────────────────────── */}
+      <div className="hidden sm:flex absolute inset-0 z-[2] items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+          className="w-full max-w-md bg-white/82 backdrop-blur-md border border-stone-200 rounded-2xl shadow-xl shadow-stone-300/30 px-8 py-10 flex flex-col items-center text-center"
+        >
+          <LoginContent features={features} />
+        </motion.div>
+      </div>
     </main>
+  );
+}
+
+type Feature = { icon: React.ElementType; title: string; description: string };
+
+function LoginContent({ features }: { features: Feature[] }) {
+  return (
+    <>
+      <span className="text-xs uppercase tracking-widest text-stone-400 bg-white border border-stone-200 rounded-full px-3 py-1 mb-7">
+        Strava-driven
+      </span>
+
+      <h1 className="text-4xl sm:text-5xl font-light text-stone-800 tracking-tight mb-3">
+        Ground Control
+      </h1>
+      <p className="text-base sm:text-lg text-stone-400 font-light mb-8">
+        Din personliga löparcoach
+      </p>
+
+      <div className="grid grid-cols-3 gap-2.5 w-full mb-8">
+        {features.map(({ icon: Icon, title, description }, i) => (
+          <motion.div
+            key={title}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut", delay: 0.35 + i * 0.08 }}
+            className="bg-white border border-stone-200 rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5"
+          >
+            <Icon size={16} className="text-stone-400" />
+            <span className="text-xs font-medium text-stone-700">{title}</span>
+            <span className="text-[0.6rem] text-stone-400 leading-tight">{description}</span>
+          </motion.div>
+        ))}
+      </div>
+
+      <a
+        href="/api/auth/login"
+        className="bg-[#fc4c02] hover:bg-[#e04400] text-white rounded-lg px-6 py-3.5 text-base font-semibold no-underline transition-colors w-full text-center"
+      >
+        Connect with Strava
+      </a>
+
+      <p className="mt-5 text-xs text-stone-300">Powered by Strava</p>
+    </>
   );
 }

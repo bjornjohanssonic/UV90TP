@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import * as motion from "motion/react-client";
 import { Activity, TrendingUp, MessageSquare } from "lucide-react";
+import DashboardPreview from "./dashboard-preview";
 
 const features = [
   {
@@ -56,79 +57,33 @@ export default function Home() {
 
   return (
     <main className="relative flex flex-col items-center justify-center min-h-screen px-4 overflow-hidden">
-      {/* Faded route map — a teaser of the run-map view that lives inside */}
+      {/* Preview of the real dashboard, blurred + dimmed behind the login card */}
+      <motion.div
+        aria-hidden
+        initial={{ opacity: 0, scale: 1.04 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        className="pointer-events-none absolute inset-0 z-0 blur-[3px]"
+      >
+        <DashboardPreview />
+      </motion.div>
+
+      {/* Cream wash so the preview reads as a backdrop and the card stays legible */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 z-0"
         style={{
-          maskImage:
-            "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 18%, rgba(0,0,0,0.45) 55%, black 100%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 18%, rgba(0,0,0,0.45) 55%, black 100%)",
+          background:
+            "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(247,243,238,0.92) 0%, rgba(247,243,238,0.78) 45%, rgba(247,243,238,0.62) 100%)",
         }}
-      >
-        <svg
-          className="h-full w-full"
-          viewBox="0 0 1200 800"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          {/* subtle map grid */}
-          <defs>
-            <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
-              <path
-                d="M 64 0 L 0 0 0 64"
-                fill="none"
-                stroke="#E5DFD5"
-                strokeWidth="1"
-              />
-            </pattern>
-          </defs>
-          <rect width="1200" height="800" fill="url(#grid)" opacity="0.5" />
+      />
 
-          {/* the GPS route, drawn like run-map */}
-          <motion.path
-            d="M 120 700 C 220 560 140 470 300 430 C 470 388 410 250 560 220 C 710 190 770 330 900 300 C 1030 270 1090 400 1000 490 C 910 580 1050 650 950 720"
-            fill="none"
-            stroke="#fc4c02"
-            strokeWidth={4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.55 }}
-            transition={{ duration: 2.6, ease: "easeInOut", delay: 0.3 }}
-          />
-
-          {/* start marker (white dot) */}
-          <motion.circle
-            cx={120}
-            cy={700}
-            r={9}
-            fill="#ffffff"
-            stroke="#fc4c02"
-            strokeWidth={4}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 0.6, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-          />
-
-          {/* end marker (orange dot) */}
-          <motion.circle
-            cx={950}
-            cy={720}
-            r={9}
-            fill="#fc4c02"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 0.6, scale: 1 }}
-            transition={{ duration: 0.4, delay: 2.9 }}
-          />
-        </svg>
-      </div>
-
+      {/* Login card — floats above the app preview */}
       <motion.div
-        initial={{ opacity: 0, filter: "blur(8px)" }}
-        animate={{ opacity: 1, filter: "blur(0px)" }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center text-center max-w-md w-full"
+        initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+        className="relative z-10 flex flex-col items-center text-center max-w-md w-full bg-white/85 backdrop-blur-md border border-stone-200 rounded-2xl shadow-xl shadow-stone-300/30 px-8 py-10"
       >
         <span className="text-xs uppercase tracking-widest text-stone-400 bg-white border border-stone-200 rounded-full px-3 py-1 mb-8">
           Strava-driven
@@ -147,7 +102,7 @@ export default function Home() {
               key={title}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 + i * 0.1 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.5 + i * 0.1 }}
               className="bg-white border border-stone-200 rounded-xl p-4 flex flex-col items-center gap-2"
             >
               <Icon size={18} className="text-stone-400" />

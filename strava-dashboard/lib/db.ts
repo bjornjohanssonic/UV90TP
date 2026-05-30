@@ -135,6 +135,19 @@ async function initTables(db: Client): Promise<void> {
       UNIQUE(date, athlete_id)
     )`);
 
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS saved_routes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      polyline TEXT NOT NULL,
+      distance_m REAL NOT NULL,
+      waypoints TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'draw',
+      base_activity_id TEXT,
+      athlete_id TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`);
+
   // ─── column migrations for existing databases ────────────────────────────
   await tryAlter(db, `ALTER TABLE activities ADD COLUMN summary_polyline TEXT`);
   await tryAlter(db, `ALTER TABLE activities ADD COLUMN battery_start INTEGER`);

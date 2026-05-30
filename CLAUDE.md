@@ -3,7 +3,7 @@
 Two packages in this repo:
 
 - **`strava-dashboard/`** — Next.js 15 running dashboard ("Ground Control"). See its own `CLAUDE.md` for full docs.
-- **`strava-mcp/`** — Local MCP server exposing running data and training plan to Claude via 8 tools. Reads `strava-dashboard/strava.db` directly (read-only, better-sqlite3).
+- **`strava-mcp/`** — Local MCP server exposing running data and training plan to Claude via 8 tools. Connects to the same Turso database the dashboard uses (`@libsql/client`, read-only access in practice).
 
 ## Quick start
 

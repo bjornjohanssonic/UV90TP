@@ -2,7 +2,7 @@
   "name": "Ground Control",
   "short_name": "Ground Control",
   "description": "Personal running dashboard with coach intelligence",
-  "start_url": "/morning",
+  "start_url": "/daily-go-plan",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

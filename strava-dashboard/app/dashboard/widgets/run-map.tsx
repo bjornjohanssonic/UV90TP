@@ -5,6 +5,7 @@ import type { Activity } from "@/types";
 import type { RunQualityScore } from "@/types/coach";
 import { formatKm, formatTime, formatPace, formatDate, formatStartEnd } from "@/lib/dashboard-helpers";
 import { computeHRZones, zoneBreakdown, formatZoneTime } from "@/lib/zones";
+import { decodePolyline } from "@/lib/polyline";
 
 interface RunMapProps {
   selectedActivity: Activity | null;
@@ -14,37 +15,6 @@ interface Photo {
   unique_id: string;
   urls: Record<string, string>;
   caption: string | null;
-}
-
-function decodePolyline(encoded: string): [number, number][] {
-  const points: [number, number][] = [];
-  let index = 0;
-  let lat = 0;
-  let lng = 0;
-
-  while (index < encoded.length) {
-    let shift = 0;
-    let result = 0;
-    let byte: number;
-    do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 0x1f) << shift;
-      shift += 5;
-    } while (byte >= 0x20);
-    lat += result & 1 ? ~(result >> 1) : result >> 1;
-
-    shift = 0;
-    result = 0;
-    do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 0x1f) << shift;
-      shift += 5;
-    } while (byte >= 0x20);
-    lng += result & 1 ? ~(result >> 1) : result >> 1;
-
-    points.push([lat / 1e5, lng / 1e5]);
-  }
-  return points;
 }
 
 type AnimationPhase = "loading" | "drawing" | "done";
@@ -420,7 +390,17 @@ export default function RunMap({ selectedActivity }: RunMapProps) {
         <div className="p-4 border-t border-stone-200">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-stone-800 truncate">{act.name}</h3>
-            <span className="text-xs text-stone-500 whitespace-nowrap ml-2">{formatDate(act.start_date)}</span>
+            <div className="flex items-center gap-3 ml-2 shrink-0">
+              <span className="text-xs text-stone-500">{formatDate(act.start_date)}</span>
+              <a
+                href={`https://www.strava.com/activities/${act.strava_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#FC5200] font-semibold underline hover:opacity-75 whitespace-nowrap"
+              >
+                View on Strava
+              </a>
+            </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[

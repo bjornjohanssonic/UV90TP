@@ -130,10 +130,10 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-2.5 items-center">
           <a
-            href="/morning"
+            href="/daily-go-plan"
             className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
           >
-            Morning
+            Daily Go Plan
           </a>
           <a
             href="/training-plan"
@@ -146,6 +146,12 @@ export default function Dashboard() {
             className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
           >
             Skor
+          </a>
+          <a
+            href="/rutter"
+            className="border border-stone-300 hover:border-stone-400 text-stone-500 hover:text-stone-800 rounded-lg px-4 py-2 text-sm font-medium no-underline transition-all"
+          >
+            Rutter
           </a>
           <button
             onClick={handleSync}

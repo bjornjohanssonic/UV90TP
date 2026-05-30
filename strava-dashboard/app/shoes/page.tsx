@@ -1,8 +1,84 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { MoreVertical } from "lucide-react";
 import type { Activity, Shoe, ShoeType } from "@/types";
 import { getShoeAlerts, getRotationWarning, getShoePredictions } from "@/lib/shoe-intelligence";
+
+interface RowAction {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+// Per-row 3-dot menu. Dropdown is fixed-positioned so it escapes the table's overflow clip.
+function RowMenu({ actions }: { actions: RowAction[] }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    const close = () => setOpen(false);
+    document.addEventListener("mousedown", onDocDown);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", onDocDown);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [open]);
+
+  function toggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
+    }
+    setOpen((v) => !v);
+  }
+
+  return (
+    <div className="flex justify-end">
+      <button
+        ref={btnRef}
+        onClick={toggle}
+        aria-label="Fler val"
+        title="Fler val"
+        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 bg-transparent border-none cursor-pointer transition-all"
+      >
+        <MoreVertical size={16} />
+      </button>
+      {open && pos && (
+        <div
+          ref={menuRef}
+          style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 50 }}
+          className="min-w-[170px] bg-white border border-stone-200 rounded-lg shadow-lg py-1"
+        >
+          {actions.map((a, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                a.onClick();
+                setOpen(false);
+              }}
+              disabled={a.disabled}
+              className="w-full text-left px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 bg-transparent border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const SHOE_TYPE_LABELS: Record<ShoeType, string> = {
   road: "Road",
@@ -309,17 +385,17 @@ export default function ShoesPage() {
         ) : (
           <div>
             {/* Header */}
-            <div className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-2 border-b border-stone-100">
+            <div className="grid grid-cols-[1fr_70px_36px] sm:grid-cols-[2fr_100px_80px_120px_36px] px-5 py-2 border-b border-stone-100">
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Sko</span>
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Km</span>
-              <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right"></span>
               <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Typ</span>
               <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Aktiviteter</span>
+              <span></span>
             </div>
             {activeShoes.map((shoe, idx) => (
               <div
                 key={shoe.id}
-                className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-3 items-center"
+                className="grid grid-cols-[1fr_70px_36px] sm:grid-cols-[2fr_100px_80px_120px_36px] px-5 py-3 items-center"
                 style={{
                   backgroundColor: idx % 2 === 0 ? "rgba(0,0,0,0.02)" : "transparent",
                   borderBottom: idx < activeShoes.length - 1 ? "1px solid rgba(0,0,0,0.05)" : "none",
@@ -330,17 +406,17 @@ export default function ShoesPage() {
                   <span className="sm:hidden text-xs text-stone-400 ml-2">{SHOE_TYPE_LABELS[shoe.type]}</span>
                 </div>
                 <EditableKm shoe={shoe} onSaved={loadShoes} />
-                <div className="text-right">
-                  <button
-                    onClick={() => handleRetire(shoe.id, true)}
-                    disabled={retiring === shoe.id}
-                    className="text-xs text-stone-400 hover:text-stone-600 bg-transparent border border-stone-200 hover:border-stone-400 rounded-lg px-3 py-1.5 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {retiring === shoe.id ? "..." : "Hall of Fame"}
-                  </button>
-                </div>
                 <span className="hidden sm:block text-xs text-stone-500">{SHOE_TYPE_LABELS[shoe.type]}</span>
                 <span className="hidden sm:block text-sm text-stone-700 text-right tabular-nums">{shoe.activity_count ?? 0}</span>
+                <RowMenu
+                  actions={[
+                    {
+                      label: retiring === shoe.id ? "..." : "Flytta till Hall of Fame",
+                      onClick: () => handleRetire(shoe.id, true),
+                      disabled: retiring === shoe.id,
+                    },
+                  ]}
+                />
               </div>
             ))}
           </div>
@@ -355,17 +431,17 @@ export default function ShoesPage() {
             <span className="text-[0.6rem] text-stone-400">Pensionerade skor</span>
           </div>
           <div>
-            <div className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-2 border-b border-stone-100">
+            <div className="grid grid-cols-[1fr_70px_36px] sm:grid-cols-[2fr_100px_80px_120px_36px] px-5 py-2 border-b border-stone-100">
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Sko</span>
               <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Km</span>
-              <span className="text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right"></span>
               <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400">Typ</span>
               <span className="hidden sm:block text-[0.6rem] uppercase tracking-wider font-medium text-stone-400 text-right">Aktiviteter</span>
+              <span></span>
             </div>
             {retiredShoes.map((shoe, idx) => (
               <div
                 key={shoe.id}
-                className="grid grid-cols-[1fr_70px_100px] sm:grid-cols-[2fr_100px_80px_80px_120px] px-5 py-3 items-center opacity-60"
+                className="grid grid-cols-[1fr_70px_36px] sm:grid-cols-[2fr_100px_80px_120px_36px] px-5 py-3 items-center opacity-60"
                 style={{
                   backgroundColor: idx % 2 === 0 ? "rgba(0,0,0,0.02)" : "transparent",
                   borderBottom: idx < retiredShoes.length - 1 ? "1px solid rgba(0,0,0,0.05)" : "none",
@@ -378,17 +454,17 @@ export default function ShoesPage() {
                 <span className="text-sm text-stone-600 text-right tabular-nums">
                   {(shoe.total_km ?? 0).toFixed(0)} km
                 </span>
-                <div className="text-right">
-                  <button
-                    onClick={() => handleRetire(shoe.id, false)}
-                    disabled={retiring === shoe.id}
-                    className="text-xs text-stone-400 hover:text-stone-600 bg-transparent border border-stone-200 hover:border-stone-400 rounded-lg px-3 py-1.5 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {retiring === shoe.id ? "..." : "Återaktivera"}
-                  </button>
-                </div>
                 <span className="hidden sm:block text-xs text-stone-500">{SHOE_TYPE_LABELS[shoe.type]}</span>
                 <span className="hidden sm:block text-sm text-stone-600 text-right tabular-nums">{shoe.activity_count ?? 0}</span>
+                <RowMenu
+                  actions={[
+                    {
+                      label: retiring === shoe.id ? "..." : "Återaktivera",
+                      onClick: () => handleRetire(shoe.id, false),
+                      disabled: retiring === shoe.id,
+                    },
+                  ]}
+                />
               </div>
             ))}
           </div>

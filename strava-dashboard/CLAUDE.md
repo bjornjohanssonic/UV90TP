@@ -29,14 +29,15 @@ app/
       use-activities.ts   Activity data fetching
       use-training-plan.ts Plan data fetching
       use-sync-stream.ts  SSE-based Strava sync
-      use-dashboard-data.ts Week aggregation, streaks, plan adherence
+      use-dashboard-data.ts Week aggregation, streaks, plan adherence, currentWeek/currentPlanWeek
       use-coach.ts        Fetches /api/coach (readiness + briefing + ACWR)
       use-tips.ts         Seeds tip DB then fetches /api/tips
+      use-weather.ts      Current + hourly weather (used by dashboard + Daily Go Plan)
     widgets/
       readiness-hero.tsx  Giant readiness score (0-100) with 5-factor breakdown bars
       daily-briefing.tsx  One-sentence coach directive with urgency icon
+      weather.tsx         Current feels-like + rain forecast snippet
       acwr-gauge.tsx      Horizontal ACWR zone gauge with marker dot
-      week-rhythm.tsx     7-day (Mon-Sun) intensity bar chart with daily target line
       tip-panel.tsx       Grid of 2-3 tip cards with severity icons + category labels
       plan-adherence.tsx  4 plan insight rows (overall %, long run, recovery, build)
       streak-tracker.tsx  Current/longest streak + 8-week consistency bar
@@ -46,25 +47,45 @@ app/
       recent-runs.tsx     Runs table with effort + quality (Q) + battery columns
       editable-battery-cell.tsx  Inline battery % editor
       battery-modal.tsx   Post-sync modal for batch battery entry
+      battery-stats-panel.tsx  Aggregate battery-wear stats across recent runs
   training-plan/
     page.tsx              Training plan editor
+  daily-go-plan/
+    page.tsx              Mobile-first daily view: readiness + briefing + Next Run +
+                          weekly distance summary + weather + ACWR + tip (PWA start_url)
+  morning/
+    page.tsx              Redirect stub → /daily-go-plan (old PWA bookmark path)
+  rutter/
+    page.tsx              Page shell with Rita / Föreslå toggle (Föreslå is "coming soon")
+    route-editor.tsx      Leaflet draw editor (waypoints + balloon + break-out +
+                          undo/redo + basemap switcher); see "Route Editor" below
+  shoes/
+    page.tsx              Shoe distance tracker + Hall of Fame (kebab row menu)
   api/
     auth/login/           Strava OAuth redirect
     auth/callback/        Strava OAuth callback
     auth/session/         GET current session
     auth/logout/          POST logout
-    activities/           GET activities from SQLite
+    activities/           GET activities from Turso
     activities/sync/      POST streaming sync from Strava API (diff-based)
     activities/[strava_id]/battery/   PATCH battery_start/battery_end (0-100 or null)
     activities/[strava_id]/photos/    GET proxy to Strava photos API (size=600)
+    activities/[strava_id]/shoe/      PATCH shoe assignment for an activity
     training-plan/        GET/POST training plan
     coach/                GET → { briefing, acwr, readiness } (CoachResponse)
     scoring/[strava_id]/  GET → RunQualityScore for a specific run
     tips/                 GET → { daily, contextual } tips (query: trigger, strava_id)
     tips/seed/            POST → seeds 141 tips into DB if empty
+    shoes/                GET (list) + POST (create) shoes
+    shoes/[id]/           PATCH retire / manual_km
+    routes/               GET (list) + POST (create) drawn routes (waypoints encoded
+                          server-side to polyline; distance computed haversine)
+    routes/[id]/          GET / DELETE a saved route
 
 types/
   activity.ts, plan.ts    Centralized TypeScript interfaces
+  shoe.ts                 Shoe, ShoeType
+  route.ts                SavedRoute, RouteSource, NewRouteInput
   coach.ts                Intelligence types: DailyBriefing, CoachContext, CoachResponse,
                           ACWRResult, ReadinessFactors, ReadinessResult, RunQualityScore,
                           Tip, TipSelection, StreakData, PlanAdherence
@@ -72,7 +93,8 @@ types/
 lib/
   session.ts              iron-session config (uses SESSION_SECRET env var, hardcoded fallback)
   dashboard-helpers.ts    Pure functions: formatting, colors, aggregation, next actions
-  db.ts                   SQLite database (better-sqlite3) + migrations (6 tables)
+  db.ts                   Turso/libsql client (`@libsql/client`) + migrations (~9 tables).
+                          Falls back to `file:./strava.db` if TURSO_DB_URL is unset.
   strava.ts               Strava API client
   training-plan.ts        Training plan logic
   acwr.ts                 ACWR computation (7d acute / 28d chronic)
@@ -80,6 +102,16 @@ lib/
   scoring.ts              Run quality scoring (0-100, 4 sub-scores) — PURE, no server deps
   coach.ts                Daily briefing generation (priority-ordered decision tree)
   tips.ts                 141 tip seed data + deterministic selection (mulberry32 PRNG)
+  polyline.ts             Shared: Google encoded-polyline encode/decode + haversine +
+                          routeDistanceMeters (used by run-map AND /rutter editor)
+  route-builder.ts        Pure route model for the /rutter editor: nodes + legs
+                          (straight/path), appendNode, insertNodeBeforeId, moveNodeId,
+                          deleteNodeId, breakOut, sealLoop, connectOutAndBack,
+                          connectBalloon, expandPath, totalDistanceMeters
+  routes.ts               Saved-routes data access (CRUD; encodes waypoints +
+                          computes distance server-side)
+  shoes.ts                Shoes CRUD + activity-km rollup
+  shoe-intelligence.ts    Shoe alerts / rotation warnings / lifespan predictions
   repositories/
     user-repository.ts    User CRUD
     activity-repository.ts Activity CRUD + date-range queries
@@ -91,16 +123,16 @@ lib/
 ## Layout
 
 Vertical stack layout (title: "Ground Control"):
-- **Header**: "Ground Control" title, race countdown badge, Training Plan link, Sync button
+- **Header**: "Ground Control" title, race countdown badge, nav links (Daily Go Plan / Plan / Skor / Rutter), Sync button
 - **Readiness Hero** (full width): Giant 0-100 score with animated counter, zone-colored glow, 5-factor breakdown bars
 - **Daily Briefing** (full width): One-sentence coach directive with urgency-based left border + Lucide icon
+- **Weather** (full width): Current feels-like + rain forecast snippet
 - **ACWR + This Week** (2-column, 2fr 3fr): ACWR gauge | This Week summary with next actions
-- **Week Rhythm** (full width): 7 vertical bars (Mon-Sun), height=distance, opacity=intensity, dashed daily target line
 - **Tip Panel** (full width): 2-3 rotating tip cards with severity indicators
-- **Run Map** (full width): Animated route drawing + quality score in details panel
-- **Week Detail** (full width): Day-by-day breakdown with prev/next week arrows
+- **Run Map + Week Detail** (2-column on lg): Animated route drawing + quality score | Day-by-day breakdown with prev/next week arrows
 - **Plan Adherence + Streak Tracker** (2-column, 50/50): Plan insights | Streak data
 - **Recent Runs** (full width): Table with Date, Name, Distance, Time, Pace, HR, Effort, Q, Battery
+- **GPS Battery Stats** (full width): Battery wear breakdown across recent runs
 
 ## Coach Intelligence
 
@@ -172,9 +204,33 @@ Used directly in `recent-runs.tsx` (client-side) and via `/api/scoring/[strava_i
 ### Tip triggers
 `daily`, `rest_day`, `recovery_day`, `post_run`, `post_long_run`, `post_hard_run`, `high_load_week`
 
-## Database Tables (6 total)
+## Database Tables (9 total)
 
 Existing: `users`, `activities`, `training_plans`, `training_weeks` (see training plan docs)
+
+### shoes
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INTEGER | Primary key |
+| name | TEXT | Brand & model (free text) |
+| type | TEXT | road / trail / hybrid / dubb / gore_tex |
+| retired | INTEGER | 1 = retired ("Hall of Fame") |
+| manual_km | REAL | Manually entered km on top of activity-tracked km |
+| athlete_id | TEXT | Owning athlete |
+| created_at | TEXT | ISO timestamp |
+
+### saved_routes
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INTEGER | Primary key |
+| name | TEXT | User-provided route name |
+| polyline | TEXT | Encoded polyline of the full rendered path (same format as activities.summary_polyline) |
+| distance_m | REAL | Server-computed haversine sum over waypoints |
+| waypoints | TEXT | JSON `[lat,lng][]` of anchor points (kept for future re-editing) |
+| source | TEXT | `draw` \| `breakout` \| `suggest` |
+| base_activity_id | TEXT | Source activity strava_id when the route started from a past run |
+| athlete_id | TEXT | Owning athlete |
+| created_at | TEXT | ISO timestamp |
 
 ### tips
 | Column | Type | Description |
@@ -245,11 +301,13 @@ circle markers, re-applied in `requestAnimationFrame` and after `setLatLng()` ca
 - Gallery mode: full-area black background with photo + pagination arrows
 - Map mode: normal map view
 
-**Map tiles:** CartoDB Dark Matter, tile pane `brightness(2.4)` filter.
+**Map tiles:** CartoDB `light_all` (matches the cream/stone theme). No brightness filter
+applied. The /rutter editor offers a runtime basemap switcher (see "Route Editor" below).
 
 Key facts:
 - `summary_polyline` stored in `activities` table (TEXT column, Google Encoded Polyline format)
-- Inline `decodePolyline()` function decodes to `[lat, lng][]`
+- `decodePolyline()` / `encodePolyline()` / `haversineMeters()` live in `lib/polyline.ts`
+  (shared by run-map widget and the /rutter editor)
 - Leaflet CSS loaded from unpkg CDN via dynamic `<link>` element
 - Leaflet JS loaded via dynamic `import("leaflet")` then `require("leaflet")` in useEffect
 - `globals.css` has `.leaflet-container img { max-width: none !important }` fix for tile rendering
@@ -257,6 +315,101 @@ Key facts:
 ### Quality Score in Details Panel
 - Fetches `RunQualityScore` from `/api/scoring/[strava_id]` for the selected run
 - Shows total score (color-coded: green 80+, neutral 60+, yellow 40+, red <40) + 4 sub-scores (P/H/E/A)
+
+## Route Editor (`/rutter`)
+
+A Google-My-Maps-style interactive editor that lets you draw a running route on the map and
+see live distance updates. Optionally start from one of your past runs or a previously saved
+route. Suggestion mode is scaffolded as "coming soon" and will be built later.
+
+### Data model (`lib/route-builder.ts`)
+
+Pure, testable. A route is `{ nodes: RouteNode[]; legs: Leg[] }` where `legs[i]` connects
+`nodes[i] → nodes[i+1]`.
+
+- **Straight leg** (`{ kind: "straight" }`) — a single straight line between its two nodes.
+  Distance via `haversineMeters`.
+- **Path leg** (`{ kind: "path"; points: LatLng[] }`) — a dense polyline slice from a real
+  activity. Geometry and true distance preserved.
+
+**Invariant:** path legs only ever connect locked nodes; free (user-placed) nodes only
+border straight legs. So move/delete only touch straight legs.
+
+Operations: `appendNode`, `insertNodeBeforeId`, `moveNodeId`, `deleteNodeId`, `breakOut`,
+`sealLoop`, `connectOutAndBack`, `connectBalloon`, `expandPath`, `totalDistanceMeters`,
+`nearestLeg`, `nearestVertexIndex`.
+
+### Interactions
+
+- **Click map** → append a free node (straight line from previous node).
+- **Drag a free node** → moves it; the polyline updates live without committing state, then
+  commits on `dragend`.
+- **Right-click a node** → delete it (free nodes only).
+- **Click a node** OR **drag the end node onto another node** → opens a playful map-anchored
+  popup offering to close the loop. Closing onto the start offers "Spring hem (tur-retur)"
+  or "Gör till rundtur". Closing onto a mid-route node offers "Koppla ihop ballong" (seal
+  loop + retrace the stem home) or "Stäng bara slingan".
+- **Bryt ut** → arms a mode where clicking the polyline on a path leg splits it at the
+  nearest vertex, inserting a zero-length straight "detour container" between two locked
+  copies of the junction. Subsequent map clicks insert detour nodes into that container.
+- **Spring hem (tur-retur)** (toolbar) → mirror the entire current path back to start.
+- **Mål-förlängning** → enter a target km delta; HUD shows remaining distance to target.
+- **Undo / Redo** → toolbar buttons + **Ctrl+Z** / **Ctrl+Y** (or **Ctrl+Shift+Z**).
+  History snapshot is taken on every `commitModel` call. Input fields are skipped so native
+  text undo still works there.
+- **Basemap switcher** (top-right map overlay):
+  - **Stiliserad** — CartoDB `light_all` (on-brand, minimal).
+  - **Karta** — OpenStreetMap standard (roads, footpaths, cycleways).
+  - **Terräng** — OpenTopoMap (best for seeing trails in forests).
+  Attribution control is enabled (required by OSM/OpenTopoMap usage policy).
+
+### Saving and loading
+
+- `POST /api/routes` with `{ name, waypoints: LatLng[], source, base_activity_id }`. The
+  server encodes the polyline and computes distance from waypoints — clients can't lie
+  about the distance.
+- **"Tidigare pass"** dropdown loads any activity with a `summary_polyline` as a locked
+  path leg (so the dense geometry is preserved). Shows count + an explicit empty state.
+- **"Sparad rutt"** dropdown loads any previously saved route the same way.
+- On load: `map.invalidateSize()` is called before `fitBounds` (avoids the classic Leaflet
+  off-screen-after-layout-change bug).
+
+### Tailwind v4 / Leaflet gotcha (carried over from run-map)
+
+The polyline is created with `opacity: 0` and inline `!important` style overrides applied
+on its SVG element before reveal. Marker icons use `L.divIcon` with inline styles to
+sidestep Tailwind preflight's `border-width: 0` reset.
+
+## Daily Go Plan (`/daily-go-plan`)
+
+Mobile-first PWA start page (renamed from `/morning` — that path now redirects). Stack:
+
+- **Header**: greeting + small "Daily Go Plan" label.
+- **Readiness hero**: big 0-100 score, color-coded, 4 factor bars.
+- **Daily briefing**: one-sentence coach directive.
+- **Next Run card** (new):
+  - Computes suggested next-run distance as `remaining weekly km / days left in week`,
+    rounded to 0.5 km. Days are Mon–Sun inclusive of today.
+  - **User override**: the number is directly editable (input + `−` / `+` 0.5 km steppers).
+    The override is persisted in `localStorage` keyed by today's local date
+    (`nextRunOverride:YYYY-MM-DD`) and shows a small "auto (X km)" reset link.
+  - **Weekly distance summary** (the "distance tips" block): Mål km / Gjort km / Kvar km
+    with a progress bar (green when ≥ 90% of target).
+  - Gracefully handles "no active plan" (shows manual-entry mode with a hint).
+- **Weather snippet**, **ACWR pill**, **Tip card**, **Footer links** (Dashboard / Rutter).
+
+## Shoes (`/shoes`)
+
+Distance tracker per pair of shoes with intelligence panel (alerts / rotation / lifespan
+prediction).
+
+- **Per-row 3-dot kebab menu** (`MoreVertical`) at the end of each row holds the
+  context actions: "Flytta till Hall of Fame" for active shoes; "Återaktivera" for
+  retired. The dropdown is `position: fixed` (computed from the button rect) so it
+  escapes the table card's `overflow-hidden` clip.
+- Editable km cell (click to edit).
+- Add-shoe form is toggle-revealed with a `+` in the header.
+- Hall of Fame (retired shoes) is rendered in a second card below.
 
 ## Sync
 
@@ -367,7 +520,7 @@ Computed in `use-dashboard-data.ts`:
 - All widget components are in `app/dashboard/widgets/` as separate files
 - Pure logic (formatting, data processing) lives in `lib/dashboard-helpers.ts`
 - Intelligence logic (ACWR, readiness, scoring, coach) lives in separate `lib/` files
-- Tailwind CSS for styling (via `@tailwindcss/postcss`), dark theme — no CSS Modules
+- Tailwind CSS for styling (via `@tailwindcss/postcss`), light/cream theme (`#F7F3EE` page bg, white cards, stone neutrals, Strava orange `#FC4C02` accent) — no CSS Modules
 - Color palette defined in `COLORS` object in `dashboard-helpers.ts` (monochromatic neutrals)
 - Health signal colors for readiness/ACWR zones: green (#4ade80), yellow (#fbbf24), red (#f87171)
 - Lucide React icons — no emojis in UI

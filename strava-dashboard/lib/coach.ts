@@ -85,29 +85,43 @@ export function generateDailyBriefing(ctx: CoachContext): DailyBriefing {
 
   // Priority 5: Long run day
   if (longRunNeeded) {
-    if (isSaturday) {
-      const headline = ctx.backToBack
-        ? `Long run: ${ctx.longRunKm}km today. ${Math.round(ctx.longRunKm * 0.65)}km tomorrow.`
-        : `Long run: ${ctx.longRunKm}km. Saturday or Sunday \u2014 your call.`;
+    const longRunFeasible = remaining >= ctx.longRunKm * 0.75;
+
+    if (!longRunFeasible && remaining > 0 && daysLeft > 0) {
+      // Not enough km left in the week to do the long run \u2014 suggest easy effort instead
+      const perDay = remaining / daysLeft;
       return {
-        headline,
-        subtext: `${remaining.toFixed(1)}km remaining this week. Get the long run done.`,
-        urgency: "key_session",
+        headline: `Easy ${perDay.toFixed(0)}km at comfortable pace.`,
+        subtext: `${remaining.toFixed(1)}km left this week \u2014 too little for the planned ${ctx.longRunKm}km long run.`,
+        urgency: "easy",
       };
     }
-    if (isSunday) {
-      return {
-        headline: `Long run TODAY: ${ctx.longRunKm}km. Last day of the week.`,
-        subtext: `${remaining.toFixed(1)}km left. Make it count.`,
-        urgency: "key_session",
-      };
-    }
-    if (ctx.dayOfWeek >= 4) {
-      return {
-        headline: `Save ${ctx.longRunKm}km long run for the weekend.`,
-        subtext: `${remaining.toFixed(1)}km remaining. Spread shorter runs until then.`,
-        urgency: "moderate",
-      };
+
+    if (longRunFeasible) {
+      if (isSaturday) {
+        const headline = ctx.backToBack
+          ? `Long run: ${ctx.longRunKm}km today. ${Math.round(ctx.longRunKm * 0.65)}km tomorrow.`
+          : `Long run: ${ctx.longRunKm}km. Saturday or Sunday \u2014 your call.`;
+        return {
+          headline,
+          subtext: `${remaining.toFixed(1)}km remaining this week. Get the long run done.`,
+          urgency: "key_session",
+        };
+      }
+      if (isSunday) {
+        return {
+          headline: `Long run TODAY: ${ctx.longRunKm}km. Last day of the week.`,
+          subtext: `${remaining.toFixed(1)}km left. Make it count.`,
+          urgency: "key_session",
+        };
+      }
+      if (ctx.dayOfWeek >= 4) {
+        return {
+          headline: `Save ${ctx.longRunKm}km long run for the weekend.`,
+          subtext: `${remaining.toFixed(1)}km remaining. Spread shorter runs until then.`,
+          urgency: "moderate",
+        };
+      }
     }
   }
 

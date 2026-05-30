@@ -207,10 +207,10 @@ function WeekPlanCard({ targetKm, doneKm }: { targetKm: number | null; doneKm: n
               const n = parseFloat(e.target.value);
               setVal(isNaN(n) ? 0 : n);
             }}
-            className="w-24 text-center text-5xl font-extralight text-stone-800 tabular-nums bg-transparent border-none outline-none p-0
+            className="w-20 text-center text-4xl font-extralight text-stone-800 tabular-nums bg-transparent border-none outline-none p-0
               [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
-          <span className="text-lg text-stone-400 mb-2">km</span>
+          <span className="text-base text-stone-400 mb-1.5">km</span>
         </div>
         <button
           onClick={() => setVal(display + 0.5)}
@@ -229,8 +229,7 @@ function WeekPlanCard({ targetKm, doneKm }: { targetKm: number | null; doneKm: n
           "Veckans mål är nått — allt extra är bonus"
         ) : (
           <>
-            Förslag: <span className="font-medium text-stone-700">{remaining.toFixed(1)} km kvar</span> ÷ {daysLeft}{" "}
-            {daysLeft === 1 ? "dag" : "dagar"}
+            <span className="font-medium text-stone-700">{remaining.toFixed(1)} km</span> kvar denna vecka
             {override != null && (
               <button onClick={reset} className="ml-2 inline-flex items-center gap-1 text-stone-400 hover:text-stone-600 bg-transparent border-none cursor-pointer">
                 <RotateCcw size={11} /> auto ({suggested?.toFixed(1)} km)
@@ -240,9 +239,8 @@ function WeekPlanCard({ targetKm, doneKm }: { targetKm: number | null; doneKm: n
         )}
       </div>
 
-      {/* Weekly distance summary (distance tips) */}
+      {/* Weekly distance summary */}
       <div className="mt-4 pt-4 border-t border-stone-100">
-        <div className="text-[0.65rem] uppercase tracking-wider font-medium text-stone-400 mb-2">Veckan</div>
         {targetKm != null && (
           <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden mb-3">
             <div
@@ -251,19 +249,10 @@ function WeekPlanCard({ targetKm, doneKm }: { targetKm: number | null; doneKm: n
             />
           </div>
         )}
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div>
-            <div className="text-base font-light text-stone-800 tabular-nums">{targetKm != null ? targetKm.toFixed(0) : "—"}</div>
-            <div className="text-[0.6rem] text-stone-400 uppercase tracking-wider">Mål km</div>
-          </div>
-          <div>
-            <div className="text-base font-light text-stone-800 tabular-nums">{doneKm.toFixed(1)}</div>
-            <div className="text-[0.6rem] text-stone-400 uppercase tracking-wider">Gjort km</div>
-          </div>
-          <div>
-            <div className="text-base font-light text-stone-800 tabular-nums">{remaining != null ? remaining.toFixed(1) : "—"}</div>
-            <div className="text-[0.6rem] text-stone-400 uppercase tracking-wider">Kvar km</div>
-          </div>
+        <div className="text-center">
+          <span className="text-xl font-light tabular-nums text-stone-800">{doneKm.toFixed(1)}</span>
+          <span className="text-stone-300 mx-1">/</span>
+          <span className="text-base font-light tabular-nums text-stone-400">{targetKm != null ? targetKm.toFixed(0) : "—"} km</span>
         </div>
       </div>
     </div>

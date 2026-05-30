@@ -285,7 +285,17 @@ function HoverDetail({ run, score }: { run: Activity; score?: RunQualityScore })
     <div className="bg-white/95 border border-stone-300/60 rounded-lg px-4 py-3 flex items-center gap-6 min-h-[52px]">
       <div className="shrink-0">
         <div className="text-xs text-stone-800 font-medium truncate max-w-[200px]">{run.name}</div>
-        <div className="text-[0.6rem] text-stone-500">{formatDate(run.start_date)}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-[0.6rem] text-stone-500">{formatDate(run.start_date)}</span>
+          <a
+            href={`https://www.strava.com/activities/${run.strava_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[0.6rem] text-[#FC5200] font-semibold underline hover:opacity-75"
+          >
+            View on Strava
+          </a>
+        </div>
       </div>
       <div className="flex items-center gap-4 flex-wrap">
         {stats.map((s) => (
@@ -485,7 +495,14 @@ export default function RecentRuns({ runs, shoes, onBatteryUpdate }: RecentRunsP
                 }}
               >
                 <span className="text-xs text-stone-500">{formatDate(act.start_date)}</span>
-                <span className="text-xs text-stone-700 truncate">{act.name}</span>
+                <a
+                  href={`https://www.strava.com/activities/${act.strava_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-stone-700 truncate hover:text-[#FC5200] transition-colors"
+                >
+                  {act.name}
+                </a>
                 <span className="text-xs text-stone-800 text-right">{formatKm(act.distance)} km</span>
                 <span className="text-xs text-stone-500 text-right">{formatPace(act.distance, act.moving_time)} /km</span>
                 <span className="hidden sm:block text-xs text-stone-500 text-right">{formatTime(act.moving_time)}</span>

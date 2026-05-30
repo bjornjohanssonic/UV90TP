@@ -11,7 +11,20 @@
       "Bash(npx tsx:*)",
       "Bash(curl:*)",
       "Bash(npx tsc:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(find . -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" \\\\\\) ! -path \"./node_modules/*\" ! -path \"./.next/*\" ! -path \"./.git/*\" -exec grep -l \"import\\\\|export\\\\|require\" {} \\\\;)",
+      "Bash(find . -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" -exec grep -l \"countActivitiesMissingPolyline\\\\|getActivitiesMissingPolyline\" {} \\\\;)",
+      "Bash(grep -r \"console\\\\\\\\.log\\\\|console\\\\\\\\.error\\\\|console\\\\\\\\.debug\\\\|debugger\\\\|TODO\\\\|FIXME\\\\|HACK\" --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\")",
+      "Bash(find lib:*)",
+      "Bash(xargs grep:*)",
+      "Bash(mkdir -p \"D:/Projekt/Strava app/strava-mcp\")",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(node dist/index.js)",
+      "Bash(rm \"Ny\\(tt\\) Textdokument.txt\" \"next level.txt\" README.md memoria.md memoria-design-system-SKILL.md verceltodo.md)",
+      "Bash(rm -rf stravahtml/)",
+      "Bash(npm uninstall:*)",
+      "Bash(grep -iE \"\\\\.\\(png|jpg|ico|svg\\)$\")"
     ]
   }
 }

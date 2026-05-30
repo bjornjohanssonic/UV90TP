@@ -7,7 +7,22 @@
       "Bash(curl:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npx vitest run)",
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:claude.ai)",
+      "Bash(cd:*)",
+      "Bash(tail:*)",
+      "Bash(npm uninstall:*)",
+      "WebFetch(domain:www.strava.com)",
+      "WebFetch(domain:developers.strava.com)",
+      "Bash(npx vitest *)",
+      "Bash(npm run *)",
+      "Bash(cd \"D:\\\\Projekt\\\\Strava app\" && rm -f \"strava-dashboard/.claude/launch.json\")",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

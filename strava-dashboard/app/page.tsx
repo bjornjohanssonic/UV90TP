@@ -49,6 +49,7 @@ export default function Home() {
         >
           Connect with Strava
         </a>
+        <p className="mt-6 text-sm text-stone-400">Powered by Strava</p>
       </main>
     </motion.div>
   );

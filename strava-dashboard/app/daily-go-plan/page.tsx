@@ -7,6 +7,7 @@ import { useCoach } from "@/app/dashboard/hooks/use-coach";
 import { useTips } from "@/app/dashboard/hooks/use-tips";
 import { useWeather } from "@/app/dashboard/hooks/use-weather";
 import { useActivities, useTrainingPlan, useDashboardData } from "@/app/dashboard/hooks";
+import { useAuthGuard } from "@/app/hooks/use-auth-guard";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -272,6 +273,7 @@ function WeekPlanCard({ targetKm, doneKm }: { targetKm: number | null; doneKm: n
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function DailyGoPlanPage() {
+  useAuthGuard();
   const { data, loading: coachLoading } = useCoach();
   const { tips, loading: tipsLoading } = useTips();
   const { activities, loadActivities } = useActivities();

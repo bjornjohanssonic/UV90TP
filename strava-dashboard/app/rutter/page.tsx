@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import RouteEditor from "./route-editor";
+import { useAuthGuard } from "@/app/hooks/use-auth-guard";
 
 type RouteMode = "draw" | "suggest";
 
 export default function RoutesPage() {
+  useAuthGuard();
   const [mode, setMode] = useState<RouteMode>("draw");
 
   return (

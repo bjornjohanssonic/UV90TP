@@ -19,6 +19,7 @@ import BatteryStatsPanel from "./widgets/battery-stats-panel";
 import { useActivities, useTrainingPlan, useSyncStream, useDashboardData } from "./hooks";
 import { useCoach } from "./hooks/use-coach";
 import { useTips } from "./hooks/use-tips";
+import { useAuthGuard } from "../hooks/use-auth-guard";
 
 export default function Dashboard() {
   const { activities, loadActivities } = useActivities();
@@ -72,6 +73,9 @@ export default function Dashboard() {
   );
 
   const [loaded, setLoaded] = useState(false);
+
+  // No valid session → every API call 401s. Bounce to login instead of spinning.
+  useAuthGuard();
 
   useEffect(() => {
     loadData().then(() => setLoaded(true));
@@ -164,11 +168,17 @@ export default function Dashboard() {
       </div>
 
       {/* Sync progress */}
-      {syncing && syncStatus && (
-        <div className="bg-white/60 rounded-xl px-4 py-3 mb-4 flex items-center gap-2.5 border border-stone-200">
-          <div className="w-3.5 h-3.5 border-2 border-stone-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-stone-700 text-sm">{syncStatus}</span>
-          {syncCount > 0 && <span className="text-stone-500 text-xs ml-auto">{syncCount} saved</span>}
+      {syncing && (
+        <div className="bg-white/60 rounded-xl px-4 py-3 mb-4 border border-stone-200">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="w-3.5 h-3.5 border-2 border-[#fc4c02] border-t-transparent rounded-full animate-spin" />
+            <span className="text-stone-700 text-sm">{syncStatus || "Connecting to Strava..."}</span>
+            {syncCount > 0 && <span className="text-stone-500 text-xs ml-auto tabular-nums">{syncCount} saved</span>}
+          </div>
+          {/* Indeterminate loading bar — total isn't known up front (Strava paginates) */}
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-stone-200/70">
+            <div className="absolute top-0 h-full rounded-full bg-[#fc4c02] animate-indeterminate-bar" />
+          </div>
         </div>
       )}
 

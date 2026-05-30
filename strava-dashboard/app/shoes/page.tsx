@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { MoreVertical } from "lucide-react";
 import type { Activity, Shoe, ShoeType } from "@/types";
 import { getShoeAlerts, getRotationWarning, getShoePredictions } from "@/lib/shoe-intelligence";
+import { useAuthGuard } from "@/app/hooks/use-auth-guard";
 
 interface RowAction {
   label: string;
@@ -156,6 +157,7 @@ function EditableKm({ shoe, onSaved }: { shoe: Shoe; onSaved: () => void }) {
 }
 
 export default function ShoesPage() {
+  useAuthGuard();
   const [shoes, setShoes] = useState<Shoe[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);

@@ -24,6 +24,14 @@ export function useSyncStream(onSyncComplete: () => Promise<void>) {
         method: "POST",
       });
 
+      if (res.status === 401) {
+        // Session expired/missing — send the user back to log in with Strava.
+        setSyncStatus(null);
+        setSyncResult({ message: "Din session har gått ut. Loggar in på nytt...", type: "error" });
+        window.location.href = "/";
+        return;
+      }
+
       if (!res.body) {
         setSyncResult({ message: "Sync failed — no response stream.", type: "error" });
         setSyncing(false);

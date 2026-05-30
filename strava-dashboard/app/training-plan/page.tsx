@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Plan, PlanWeek } from "@/types";
 import { COLORS, PHASE_COLORS, PHASE_LABELS } from "@/lib/dashboard-helpers";
+import { useAuthGuard } from "@/app/hooks/use-auth-guard";
 
 function formatDate(iso: string): string {
   return new Date(iso + "T00:00:00").toLocaleDateString("sv-SE", {
@@ -43,6 +44,7 @@ function daysUntil(dateStr: string): number {
 }
 
 export default function TrainingPlanPage() {
+  useAuthGuard();
   const [plan, setPlan] = useState<Plan | null>(null);
   const [weeks, setWeeks] = useState<PlanWeek[]>([]);
   const [loading, setLoading] = useState(true);
